@@ -479,6 +479,8 @@ public class GeneralParams {
 		ALLOW_GEN_MESSAGE 		= false;
 		
 		USE_SQL_COINDB 			= false;
+		
+		LIMIT_IBD_30MINS 		= true;
 	}
 	
 }
