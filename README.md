@@ -34,13 +34,13 @@ peers action:addpeers peerslist:spartacusrex.com:9001
 Or you can specify that from the cli.. 
 
 ```
-java -jar minima.jar -port 9001 -data ~/.minima -p2pnodes spartacusrex.com:9001
+java -jar minima.jar -p2pnodes spartacusrex.com:9001
 ```
 
 You can also provide a file with a list of nodes.. (preferred option)
 
 ```
-java -jar minima.jar -port 9001 -data ~/.minima -p2pnodes https://spartacusrex.com/minimapeers.txt
+java -jar minima.jar -p2pnodes https://spartacusrex.com/minimapeers.txt
 ```
 
 Once Minima has started use help to get a full list of functions available to you.. 
