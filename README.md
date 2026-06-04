@@ -1,5 +1,5 @@
 # minima-core
-Minima full node applcation 
+Minima full node application 
 
 This is a clean implementation of a Minima node
 
