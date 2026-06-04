@@ -20,7 +20,7 @@ java -jar minima.jar -help
 The main ones being ( these are the default values )
 
 ```
-java -jar minima.jar -port 9001 -data ~/Minimadata
+java -jar minima.jar -port 9001 -data ~/.minima
 ```
 
 You will need to add a valid Minima peer to get started.. 
