@@ -23,7 +23,7 @@ The main ones being ( these are the default values )
 java -jar minima.jar -port 9001 -data ~/.minima
 ```
 
-You will need to add a valid Minima peer to get started.. none are added by default
+You will need to add a valid Minima peer to get started.. none are added by default 
 
 You can do this by running a command in Minima once it starts
 
