@@ -1,7 +1,9 @@
 # minima-core
 Minima full node application 
 
-This is a clean implementation of a Minima node
+This is an implementation of a Minima node running on the Minima network
+
+It does not include the MDS system or Maxima - JUST Minima.. Clean.
 
 Run from the command line with 
 
