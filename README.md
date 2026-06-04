@@ -55,6 +55,8 @@ And to breakdown how to use a function
 help command:send
 ```
 
+To wipe all data and start again use -clean
+
 ### Build
 
 You can build the project with
@@ -71,4 +73,16 @@ Or use the helper script
 
 Which will build the jars and copy them to the jar folder
 
+### Testing on private network
 
+The best way to test Minima is to run a private network
+
+```
+java -jar minima.jar -solo
+```
+
+And to wipe the node clean and start again.. 
+
+```
+java -jar minima.jar -solo -clean
+```
