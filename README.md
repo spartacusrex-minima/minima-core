@@ -40,6 +40,10 @@ java -jar minima.jar -p2pnodes spartacusrex.com:9001
 You can also provide a file with a list of nodes.. (preferred option)
 
 ```
+peers action:addpeers peerslist:https://spartacusrex.com/minimapeers.txt
+```
+
+```
 java -jar minima.jar -p2pnodes https://spartacusrex.com/minimapeers.txt
 ```
 
