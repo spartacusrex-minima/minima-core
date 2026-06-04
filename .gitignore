@@ -1,0 +1,17 @@
+#ignore the main bin
+bin/
+
+# Ignore Gradle project-specific cache directory
+.gradle
+
+# Ignore Gradle build output directory
+build
+
+.settings/*
+.vscode/*
+#.settings/org.eclipse.buildship.core.prefs
+#.settings/org.eclipse.jdt.core.prefs
+.idea/*
+
+.nb-gradle/
+
