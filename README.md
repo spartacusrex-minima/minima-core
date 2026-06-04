@@ -89,7 +89,7 @@ java -jar minima.jar -solo -clean
 
 ### MegaMMR node
 
-Minima has 2 modes.. a simple 1 user node that works for a single user or a megammr node that stores all data. 
+Minima has 2 modes.. a simple 1 user node that works for a single user or a megammr node that stores all data - an exchange would use this. 
 
 This allows other nodes to resync from it.. and sending from any account using the sendfrom functions.
 
