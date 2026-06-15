@@ -1232,8 +1232,8 @@ public class Main extends MessageProcessor {
 				//Difference..
 				long diff 			= timenow - tiptime;
 				
-				//Is the gap too great - 2 Hours
-				if(diff > 1000 * 60 * 120) {
+				//Is the gap too great - 30 Mins
+				if(diff > 1000 * 60 * 30) {
 					
 					MinimaLogger.log("[!] Chain Tip too far behind.. restart Networking!");
 					
