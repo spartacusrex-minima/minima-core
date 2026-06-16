@@ -62,11 +62,15 @@ public class Minima {
 	}
 	
 	public String runMinimaCMD(String zInput, boolean zPrettyJSON){
+		return runMinimaCMD(zInput, zPrettyJSON, "0x00");
+	}
+	
+	public String runMinimaCMD(String zInput, boolean zPrettyJSON, String zUserID){
 		//trim it..
 		String input = zInput.trim();
     	
     	//Run it..
-    	JSONArray res = CommandRunner.getRunner().runMultiCommand(input);
+    	JSONArray res = CommandRunner.getRunner().runMultiCommand(zUserID, zInput);
     	
     	//Get the result.. 
     	String result = null;

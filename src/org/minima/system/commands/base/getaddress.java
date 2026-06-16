@@ -62,11 +62,11 @@ public class getaddress extends Command {
 			ScriptRow scrow = wallet.getDefaultAddress();
 			
 			//Get the key row.. THIS is a fix for an issue where backup saved with wrong seed phrase
-			if(MinimaDB.getDB().getWallet().isBaseSeedAvailable()) {
+			/*if(MinimaDB.getDB().getWallet().isBaseSeedAvailable()) {
 				if(!keys.checkKey(scrow.getPublicKey())) {
 					throw new CommandException("[!] SERIOUS ERROR - INCORRECT Public key : "+scrow.getPublicKey());
 				}
-			}
+			}*/
 			
 			//Put the details in the response..
 			ret.put("response", scrow.toJSON());

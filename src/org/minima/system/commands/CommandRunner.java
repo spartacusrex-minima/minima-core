@@ -256,6 +256,25 @@ public class CommandRunner {
 			//Check this MiniDAPP can make this call..
 			boolean allowed = isCommandAllowed(comname);
 			
+			//Is this an ADMIN User
+			if(!zMiniDAPPID.equals("0x00")) {
+				
+				//Public MiniDAPPs cannot add to pending..
+				if(!allowed) {
+					result=  new JSONObject();
+					result.put("command", command);
+					result.put("status", false);
+					result.put("pending", false);
+					result.put("error", "You need ADMIN privileges to run this command");
+					
+					//Add to the List..
+					finalresult.add(result);
+					
+					//And that's all folks..
+					break;
+				}
+			}
+
 			//Is this a MiniDAPP..
 			/*if(zMiniDAPPID.equals(Main.getInstance().getMDSManager().getPublicMiniDAPPID())) {
 				
