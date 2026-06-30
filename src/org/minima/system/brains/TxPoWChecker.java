@@ -820,7 +820,7 @@ public class TxPoWChecker {
 		
 		//Check that the remaining all point to 0x00
 		for(int i=blocksup;i<GlobalParams.MINIMA_CASCADE_LEVELS;i++) {
-			if(!zBlock.getSuperParent(blocksup).isEqual(MiniData.ZERO_TXPOWID)) {
+			if(!zBlock.getSuperParent(i).isEqual(MiniData.ZERO_TXPOWID)) {
 				return false;
 			}
 		}
