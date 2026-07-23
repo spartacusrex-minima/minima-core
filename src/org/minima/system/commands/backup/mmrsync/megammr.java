@@ -1,8 +1,11 @@
 package org.minima.system.commands.backup.mmrsync;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -13,12 +16,14 @@ import java.util.Hashtable;
 import java.util.Iterator;
 
 import org.minima.database.MinimaDB;
+import org.minima.database.cascade.Cascade;
 import org.minima.database.txpowtree.TxPowTree;
 import org.minima.objects.Coin;
 import org.minima.objects.CoinProof;
 import org.minima.objects.IBD;
 import org.minima.objects.TxBlock;
 import org.minima.objects.TxPoW;
+import org.minima.objects.base.MiniByte;
 import org.minima.objects.base.MiniData;
 import org.minima.objects.base.MiniNumber;
 import org.minima.objects.mmr.MMR;
@@ -181,9 +186,14 @@ public class megammr extends Command {
 				throw new CommandException("Restore file doesn't exist : "+restorefile.getAbsolutePath());
 			}
 			
-			//Pre-flight - will the inflated object graph fit in the heap AT ALL..
-			//(the decoded MegaMMR+IBD graph is several times the on-disk size; running out
-			//of memory mid-load is an uncatchable process-kill on Android without this)
+			//Pre-flight - can this device hold the STREAMED working set at all..
+			//Since the fork's streaming import (below) the peak is only:
+			//  the MegaMMR object graph (which a running -megammr node holds anyway)
+			//  + the cascade (~10-20MB worst case) + ONE batch of 256 TxBlocks
+			//- NOT the whole decoded MegaMMR+IBD graph the upstream import needed
+			//(several x the file size; it OOM-killed phone imports uncatchably).
+			//The file length is only an upper bound on the MegaMMR portion, so this
+			//gate is deliberately loose - the catch(Throwable) below is the real net.
 			long filelen = restorefile.length();
 			Runtime rt   = Runtime.getRuntime();
 			long usedmem = rt.totalMemory() - rt.freeMemory();
@@ -191,52 +201,123 @@ public class megammr extends Command {
 			MinimaLogger.log("MegaMMR import pre-flight.. file:"+MiniFormat.formatSize(filelen)
 					+" heapfree:"+MiniFormat.formatSize(freemem)
 					+" heapmax:"+MiniFormat.formatSize(rt.maxMemory()));
-			if(filelen * 4 > freemem) {
+			if(filelen > freemem) {
 				throw new CommandException("MegaMMR file too large for this device's memory.. file "
-						+MiniFormat.formatSize(filelen)+" needs ~"+MiniFormat.formatSize(filelen*4)
-						+" free heap, only "+MiniFormat.formatSize(freemem)+" available");
+						+MiniFormat.formatSize(filelen)+" exceeds the "
+						+MiniFormat.formatSize(freemem)+" free heap even before decoding");
+			}
+			if(filelen * 2 > freemem) {
+				MinimaLogger.log("WARNING: MegaMMR file is large relative to free heap - "
+						+"import will abort cleanly if the decoded MegaMMR does not fit");
 			}
 
-			//Load it in..
-			MegaMMRBackup mmrback = new MegaMMRBackup();
-
+			//STREAMING IMPORT (fork change - upstream loaded the ENTIRE MegaMMRBackup,
+			//i.e. MegaMMR + every IBD TxBlock, into RAM at once).
+			//File format (MegaMMRBackup.writeDataStream):
+			//  [MiniNumber version] [MegaMMR] [IBD: cascade-flag byte, cascade?, count, TxBlocks...]
+			//We read it in that order and dispatch the TxBlocks to the TxPoWProcessor in
+			//BATCHES so the full block list never exists in memory:
+			//  - batch #1 carries the Cascade (processor installs it because the tree/cascade
+			//    were just reset); later batches carry none and attach to the retained tip
+			//  - restore=true on EVERY postProcessIBD call (archiveResetReady sets mRestoring,
+			//    which would otherwise silently drop the message) and we poll
+			//    isIBDProcessFinished() between batches (the flag is reset per call)
+			//  - resetFirstIBDTimer() defuses the processor's 5-min/3-hour "chain tip up to
+			//    date" gate that would otherwise silently drop batches 2..K for recent chains
+			DataInputStream dis = null;
 			try {
-				MinimaLogger.log("Loading MegaMMR.. size:"+MiniFormat.formatSize(filelen));
-				//STRICT load - a truncated file must fail loudly, never import partial data
-				MiniFile.loadObjectSlowStrict(restorefile, mmrback);
-				MinimaLogger.log("MegaMMR file loaded.. coins:"+mmrback.getMegaMMR().getAllCoins().size());
-			}catch(Throwable exc) {
-				//Throwable - an OutOfMemoryError is NOT an Exception and previously
-				//killed the whole process before anything was reported
-				mmrback = null;
-				System.gc();
-				throw new CommandException("MegaMMR import failed during load : "+exc);
-			}
+				dis = new DataInputStream(new BufferedInputStream(new FileInputStream(restorefile), 65536));
 
-			try {
-				//Now we have the file.. lets set it..
+				//Backup format version (currently 1)
+				MiniNumber version = MiniNumber.ReadFromStream(dis);
+
+				//Read the FULL MegaMMR - this part must fit in RAM (a running -megammr
+				//node holds the same structure live, so if the node can run megammr at
+				//all, this fits). Progress is logged every 250k coins (Logs tab).
+				MinimaLogger.log("Loading MegaMMR portion.. (file "+MiniFormat.formatSize(filelen)+")");
+				MegaMMR loadedmega = new MegaMMR();
+				loadedmega.readDataStream(dis);
+				MinimaLogger.log("MegaMMR loaded.. coins:"+loadedmega.getAllCoins().size());
+
+				//Reset chain state ONCE, before any IBD batch - wipes archive/txpow DBs,
+				//cascade and tree so batch #1's cascade installs and its first block
+				//becomes the tree root. NEVER call this between batches.
 				Main.getInstance().archiveResetReady(false);
 
-				//Get ready..
+				//Install the imported MegaMMR as the live one BEFORE the IBD is processed -
+				//recalculateTree() feeds cascading blocks into it via megammr.addBlock
 				MinimaDB.getDB().getMegaMMR().clear();
+				MinimaDB.getDB().hardSetMegaMMR(loadedmega);
 
-				//Now load the Mega MMR so is the current one..
-				MinimaDB.getDB().hardSetMegaMMR(mmrback.getMegaMMR());
+				//Defuse the "chain tip up to date" gate (see comment block above)
+				Main.getInstance().getTxPoWProcessor().resetFirstIBDTimer();
 
-				//Now process the IBD.. Override the restore setting
-				MinimaLogger.log("Process new IBD");
-				Main.getInstance().getTxPoWProcessor().postProcessIBD(mmrback.getIBD(), "0x00", true);
-			
-			//Small Pause..
-			while(true) {
-				Thread.sleep(250);
-				
-				//Check
-				if(Main.getInstance().getTxPoWProcessor().isIBDProcessFinished()) {
-					break;
+				//IBD header: cascade flag [+ cascade], then the total block count
+				Cascade cascade = null;
+				if(MiniByte.ReadFromStream(dis).isTrue()) {
+					cascade = new Cascade();
+					cascade.readDataStream(dis);
 				}
+				int totalblocks = MiniNumber.ReadFromStream(dis).getAsInt();
+				MinimaLogger.log("Streaming IBD.. blocks:"+totalblocks
+						+(cascade!=null ? " (with cascade)" : " (no cascade)"));
+
+				//256 matches the processor's own internal recalculateTree cadence
+				int BATCH_SIZE  = 256;
+				int blocksdone  = 0;
+				boolean first   = true;
+				while(blocksdone < totalblocks) {
+
+					//Build one small batch - blocks MUST stay contiguous and in file
+					//order or processSyncBlock throws 'Invalid SyncBlock as NO PARENT!'
+					IBD batch = new IBD();
+					if(first && cascade != null) {
+						batch.setCascade(cascade);
+					}
+					int n = Math.min(BATCH_SIZE, totalblocks - blocksdone);
+					for(int i=0;i<n;i++) {
+						batch.getTxBlocks().add(TxBlock.ReadFromStream(dis));
+					}
+					blocksdone += n;
+
+					//Dispatch to the processor thread (the ONLY safe way in - the
+					//per-block processSyncBlock is private and not thread-safe) and
+					//wait for it to finish before reading the next batch, so at most
+					//one batch is in memory at a time
+					Main.getInstance().getTxPoWProcessor().postProcessIBD(batch, "0x00", true);
+					while(!Main.getInstance().getTxPoWProcessor().isIBDProcessFinished()) {
+						Thread.sleep(100);
+					}
+
+					first = false;
+
+					//Progress every ~10 batches (visible live in the Logs tab)
+					if((blocksdone % (BATCH_SIZE*10)) == 0 || blocksdone == totalblocks) {
+						MinimaLogger.log("IBD blocks processed.. "+blocksdone+"/"+totalblocks);
+					}
+				}
+
+				//The cascade is installed in the DB now - drop our reference
+				cascade = null;
+
+				dis.close();
+				dis = null;
+
+			}catch(Throwable exc) {
+				//Throwable so an OutOfMemoryError (an Error - a plain catch(Exception)
+				//let it KILL the whole process) reports cleanly instead. A truncated
+				//file surfaces here too as an EOFException from the streamed reads.
+				//NB the chain DBs may be part-imported at this point - restart + retry.
+				if(dis != null) {
+					try{ dis.close(); }catch(Exception ignore) {}
+				}
+				System.gc();
+				throw new CommandException("MegaMMR import failed : "+exc
+						+" .. RESTART Minima before retrying");
 			}
-			
+
+			try {
+
 			//Quick clean
 			MinimaLogger.log("System memory clean..");
 			System.gc();
