@@ -275,14 +275,47 @@ public class MegaMMR implements Streamable {
 		int size = MiniNumber.ReadFromStream(zIn).getAsInt();
 		mAllUnspentCoins = new Hashtable<>(Math.max(16, (size*4)/3));
 		for(int i=0;i<size;i++) {
+
+			//IN-FLIGHT HEAP WATERMARK (fork change).. total heap exhaustion is
+			//PROCESS-GLOBAL: once <1% is free after GC, ANY thread's next allocation
+			//throws OutOfMemoryError - and whichever unguarded thread hits it first
+			//(a timer, the UI) kills the whole app before the import's own
+			//catch(Throwable) can report. So abort while there is still runway.
+			//Checked every 64k coins - cheap next to the stream decode.
+			if((i & 0xFFFF) == 0) {
+				Runtime rt   = Runtime.getRuntime();
+				long freemem = rt.maxMemory() - (rt.totalMemory() - rt.freeMemory());
+				long floor   = Math.max(32*1024*1024, rt.maxMemory()/20);
+				if(freemem < floor) {
+					throw new IOException("Heap nearly exhausted loading MegaMMR coins ("
+							+i+"/"+size+" loaded, "+MiniFormat.formatSize(freemem)
+							+" free) - aborting before the process dies. "
+							+"This device cannot hold this MegaMMR in memory.");
+				}
+			}
+
 			Coin cc = Coin.ReadFromStream(zIn);
 
-			//Do we prune it..
+			//MEGAPRUNE AT READ TIME (fork change).. isPrunable is a pure per-coin test
+			//(address length / has-state / non-Minima token), so prunable coins can be
+			//dropped BEFORE they ever enter the table. Upstream's order - load ALL
+			//coins, THEN prune - allocated the full unpruned set at the worst possible
+			//moment, which is what OOM'd 512MB-heap phones. We still mark the MMR
+			//entry unspendable, exactly as scanUnspendable() would have.
+			if(GeneralParams.MEGAMMR_MEGAPRUNE && isPrunable(cc)) {
+				MMREntry ment = mMMR.getEntry(0, cc.getMMREntryNumber());
+				if(!ment.isEmpty()) {
+					ment.getMMRData().setUnspendable(true);
+				}
+				continue;
+			}
+
+			//Keep it..
 			mAllUnspentCoins.put(cc.getCoinID().to0xString(), cc);
 
 			//Show progress on very large loads (visible in the Android Logs tab)
 			if(i>0 && i%250000==0) {
-				MinimaLogger.log("MegaMMR loading coins.. "+i+"/"+size);
+				MinimaLogger.log("MegaMMR loading coins.. "+i+"/"+size+" kept:"+mAllUnspentCoins.size());
 			}
 		}
 		

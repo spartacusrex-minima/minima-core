@@ -268,6 +268,17 @@ public class megammr extends Command {
 				boolean first   = true;
 				while(blocksdone < totalblocks) {
 
+					//In-flight heap watermark per batch - same rationale as the coin
+					//loop in MegaMMR.readDataStream: abort cleanly BEFORE global heap
+					//exhaustion kills an unguarded thread somewhere else in the app
+					long batchfree = rt.maxMemory() - (rt.totalMemory() - rt.freeMemory());
+					long heapfloor = Math.max(32*1024*1024, rt.maxMemory()/20);
+					if(batchfree < heapfloor) {
+						throw new CommandException("Heap nearly exhausted at IBD block "
+								+blocksdone+"/"+totalblocks+" ("+MiniFormat.formatSize(batchfree)
+								+" free) - aborting before the process dies. RESTART Minima.");
+					}
+
 					//Build one small batch - blocks MUST stay contiguous and in file
 					//order or processSyncBlock throws 'Invalid SyncBlock as NO PARENT!'
 					IBD batch = new IBD();
