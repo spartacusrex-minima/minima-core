@@ -181,28 +181,51 @@ public class megammr extends Command {
 				throw new CommandException("Restore file doesn't exist : "+restorefile.getAbsolutePath());
 			}
 			
+			//Pre-flight - will the inflated object graph fit in the heap AT ALL..
+			//(the decoded MegaMMR+IBD graph is several times the on-disk size; running out
+			//of memory mid-load is an uncatchable process-kill on Android without this)
+			long filelen = restorefile.length();
+			Runtime rt   = Runtime.getRuntime();
+			long usedmem = rt.totalMemory() - rt.freeMemory();
+			long freemem = rt.maxMemory() - usedmem;
+			MinimaLogger.log("MegaMMR import pre-flight.. file:"+MiniFormat.formatSize(filelen)
+					+" heapfree:"+MiniFormat.formatSize(freemem)
+					+" heapmax:"+MiniFormat.formatSize(rt.maxMemory()));
+			if(filelen * 4 > freemem) {
+				throw new CommandException("MegaMMR file too large for this device's memory.. file "
+						+MiniFormat.formatSize(filelen)+" needs ~"+MiniFormat.formatSize(filelen*4)
+						+" free heap, only "+MiniFormat.formatSize(freemem)+" available");
+			}
+
 			//Load it in..
 			MegaMMRBackup mmrback = new MegaMMRBackup();
-			
+
 			try {
-				MinimaLogger.log("Loading MegaMMR.. size:"+MiniFormat.formatSize(restorefile.length()));
-				MiniFile.loadObjectSlow(restorefile, mmrback);
-			}catch(Exception exc) {
-				throw new CommandException(exc.toString());
+				MinimaLogger.log("Loading MegaMMR.. size:"+MiniFormat.formatSize(filelen));
+				//STRICT load - a truncated file must fail loudly, never import partial data
+				MiniFile.loadObjectSlowStrict(restorefile, mmrback);
+				MinimaLogger.log("MegaMMR file loaded.. coins:"+mmrback.getMegaMMR().getAllCoins().size());
+			}catch(Throwable exc) {
+				//Throwable - an OutOfMemoryError is NOT an Exception and previously
+				//killed the whole process before anything was reported
+				mmrback = null;
+				System.gc();
+				throw new CommandException("MegaMMR import failed during load : "+exc);
 			}
-			
-			//Now we have the file.. lets set it..
-			Main.getInstance().archiveResetReady(false);
-			
-			//Get ready..
-			MinimaDB.getDB().getMegaMMR().clear();
-			
-			//Now load the Mega MMR so is the current one..
-			MinimaDB.getDB().hardSetMegaMMR(mmrback.getMegaMMR());
-			
-			//Now process the IBD.. Override the restore setting
-			MinimaLogger.log("Process new IBD");
-			Main.getInstance().getTxPoWProcessor().postProcessIBD(mmrback.getIBD(), "0x00", true);
+
+			try {
+				//Now we have the file.. lets set it..
+				Main.getInstance().archiveResetReady(false);
+
+				//Get ready..
+				MinimaDB.getDB().getMegaMMR().clear();
+
+				//Now load the Mega MMR so is the current one..
+				MinimaDB.getDB().hardSetMegaMMR(mmrback.getMegaMMR());
+
+				//Now process the IBD.. Override the restore setting
+				MinimaLogger.log("Process new IBD");
+				Main.getInstance().getTxPoWProcessor().postProcessIBD(mmrback.getIBD(), "0x00", true);
 			
 			//Small Pause..
 			while(true) {
@@ -250,7 +273,15 @@ public class megammr extends Command {
 //					MinimaLogger.log("Fail Import : "+coinproofresp.getString("error")+" @ "+cp.toJSON());
 //				}
 			}
-			
+
+			}catch(Throwable exc) {
+				//Throwable so an OutOfMemoryError mid-import reports instead of
+				//killing the process - the DB may be part-imported at this point
+				System.gc();
+				throw new CommandException("MegaMMR import failed mid-import : "+exc
+						+" .. RESTART Minima before retrying");
+			}
+
 			JSONObject resp = new JSONObject();
 			resp.put("message", "MegaMMR import finished.. please restart");
 			ret.put("response", resp);
