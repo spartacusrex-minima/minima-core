@@ -89,8 +89,8 @@ jar {
     }
 }
 
-/*docker {
-    name 'minimaglobal/minimacore:dev'
+docker {
+    name 'minimaglobal/minimacore'
     dockerfile project.file('docker/Dockerfile')
     
     //Remove this for a local build - this is cross platform
@@ -105,7 +105,7 @@ jar {
     copySpec.from("$buildDir/lib/minima-all.jar",).into(".")
     copySpec.from("docker/minima.config").into(".")
     copySpec.from("docker/minima").into(".")
-}*/
+}
 
 /*test {
     dependsOn cleanTest
