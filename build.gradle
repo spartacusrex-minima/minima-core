@@ -90,7 +90,7 @@ jar {
 }
 
 docker {
-    name 'minimaglobal/minimacore'
+    name 'minimaglobal/minimacore:dev'
     dockerfile project.file('docker/Dockerfile')
     
     //Remove this for a local build - this is cross platform
