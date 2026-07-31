@@ -8,6 +8,7 @@ import org.minima.system.commands.backup.backup;
 import org.minima.system.commands.backup.decryptbackup;
 import org.minima.system.commands.backup.mysql;
 import org.minima.system.commands.backup.mysqlcoins;
+import org.minima.system.commands.backup.rescue;
 import org.minima.system.commands.backup.reset;
 import org.minima.system.commands.backup.restore;
 import org.minima.system.commands.backup.restoresync;
@@ -237,6 +238,7 @@ public class help extends Command {
 			
 			addCommand(details, new megammr());
 			addCommand(details, new megammrsync());
+			addCommand(details, new rescue());
 			
 			addCommand(details, new mysql());
 			addCommand(details, new mysqlcoins());

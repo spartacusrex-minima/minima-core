@@ -1039,15 +1039,22 @@ public class Main extends MessageProcessor {
 			
 		}else if(zMessage.getMessageType().equals(MAIN_DO_RESCUE)) {
 			
-			if(!GeneralParams.RESCUE_MEGAMMR_NODE.equals("")) {
+			String megammrhost = "";
+			if(zMessage.exists("host")) {
+				megammrhost = zMessage.getString("host");
+			}else {
+				megammrhost = GeneralParams.RESCUE_MEGAMMR_NODE;
+			}
+			
+			if(!megammrhost.equals("")) {
 				
-				MinimaLogger.log("Running MegaMMR Sync from Rescuse Node "+GeneralParams.RESCUE_MEGAMMR_NODE);
+				MinimaLogger.log("Running MegaMMR Sync from Rescue Node "+megammrhost);
 				
 				//Make sure all keys created..
 				mInitKeysCreated = true;
 				
 				//Run a rescue command..
-				String command = "megammrsync action:resync host:"+GeneralParams.RESCUE_MEGAMMR_NODE;
+				String command = "megammrsync action:resync host:"+megammrhost;
 				
 				//And run it..
 				JSONObject res = CommandRunner.getRunner().runSingleCommand(command);
@@ -1057,6 +1064,9 @@ public class Main extends MessageProcessor {
 				
 				//At this point.. STOP..
 				Runtime.getRuntime().halt(0);
+				
+			}else {
+				MinimaLogger.log("NO MegaMMR Sync Rescue Node specified..");
 			}
 		
 		}else if(zMessage.getMessageType().equals(MAIN_PULSE)) {

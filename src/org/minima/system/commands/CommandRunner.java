@@ -12,6 +12,7 @@ import org.minima.system.commands.backup.backup;
 import org.minima.system.commands.backup.decryptbackup;
 import org.minima.system.commands.backup.mysql;
 import org.minima.system.commands.backup.mysqlcoins;
+import org.minima.system.commands.backup.rescue;
 import org.minima.system.commands.backup.reset;
 import org.minima.system.commands.backup.restore;
 import org.minima.system.commands.backup.restoresync;
@@ -150,7 +151,7 @@ public class CommandRunner {
 			
 			new multisig(), new multisigread(), new checkaddress(),
 			
-			new sphincs(),
+			new sphincs(), new rescue(),
 			
 			new ping(), new random(), new seedrandom(), new mysql(), new mysqlcoins(), new slavenode(), 
 			//new file(),
