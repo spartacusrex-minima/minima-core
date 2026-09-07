@@ -58,8 +58,14 @@ public class FastByteArrayStream extends ByteArrayOutputStream {
 						+ " len:"+len
 						);
 				
+				//Clean up memory
+				System.gc();
+				
+				//And throw an error
+				throw new IllegalArgumentException("OUT of Memory on FastByteArrayStream");
+				
 				//Hmm.. serious error..
-				Runtime.getRuntime().halt(0);
+				//Runtime.getRuntime().halt(0);
 			}
 		}
 		
