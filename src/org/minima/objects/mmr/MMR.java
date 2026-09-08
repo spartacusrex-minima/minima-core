@@ -15,6 +15,7 @@ import org.minima.database.MinimaDB;
 import org.minima.objects.base.MiniData;
 import org.minima.objects.base.MiniNumber;
 import org.minima.system.params.GeneralParams;
+import org.minima.utils.MiniFormat;
 import org.minima.utils.MinimaLogger;
 import org.minima.utils.Streamable;
 import org.minima.utils.json.JSONArray;
@@ -722,10 +723,29 @@ public class MMR implements Streamable {
 		
 		int len = MiniNumber.ReadFromStream(zIn).getAsInt();
 		for(int i=0;i<len;i++) {
+
+			//IN-FLIGHT HEAP WATERMARK (fork change).. the mainnet MMR tree is the
+			//SINGLE biggest structure (~1.5M entries / ~1GB measured) and loads BEFORE
+			//the coin table, so on a small-heap device the process died HERE - global
+			//heap exhaustion killed an unguarded thread before the import's own guard
+			//could report. Abort cleanly while other threads still have runway.
+			//Checked every 64k entries - cheap next to the stream decode.
+			if((i & 0xFFFF) == 0) {
+				Runtime rt   = Runtime.getRuntime();
+				long freemem = rt.maxMemory() - (rt.totalMemory() - rt.freeMemory());
+				long floor   = Math.max(32*1024*1024, rt.maxMemory()/20);
+				if(freemem < floor) {
+					throw new IOException("Heap nearly exhausted loading the MMR tree ("
+							+i+"/"+len+" entries, "+MiniFormat.formatSize(freemem)
+							+" free) - aborting before the process dies. "
+							+"This device cannot hold this MegaMMR in memory.");
+				}
+			}
+
 			MMREntry entry = MMREntry.ReadFromStream(zIn);
 			setEntry(entry.getRow(), entry.getEntryNumber(), entry.getMMRData());
 		}
-		
+
 		//Finalise..
 		finalizeSet();
 	}
