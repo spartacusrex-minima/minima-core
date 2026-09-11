@@ -56,7 +56,7 @@ public class Main extends MessageProcessor {
 	boolean STARTUP_COMPLETE = false;
 	
 	/**
-	 * Uptime for the node
+	 * Up time for the node
 	 */
 	long mUptimeMilli = System.currentTimeMillis();
 	
