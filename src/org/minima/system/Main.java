@@ -51,7 +51,7 @@ public class Main extends MessageProcessor {
 	public String 	STARTUP_ERROR_MSG 	= "";
 	
 	/**
-	 * Is StartUp Complete
+	 * Is StartUp Complete 
 	 */
 	boolean STARTUP_COMPLETE = false;
 	
