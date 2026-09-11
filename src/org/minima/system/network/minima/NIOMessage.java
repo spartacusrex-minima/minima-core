@@ -1287,7 +1287,7 @@ public class NIOMessage implements Runnable {
 			}else {
 				
 				//UNKNOWN MESSAGE..
-				MinimaLogger.log("Unknown Message type received from "+mClientUID+" type:"+type+" size:"+data.length);
+				//MinimaLogger.log("Unknown Message type received from "+mClientUID+" type:"+type+" size:"+data.length);
 			}
 			
 		} catch (Exception e) {
