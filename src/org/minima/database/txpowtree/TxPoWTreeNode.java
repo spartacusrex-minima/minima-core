@@ -12,6 +12,7 @@ import org.minima.database.wallet.Wallet;
 import org.minima.objects.Coin;
 import org.minima.objects.CoinProof;
 import org.minima.objects.StateVariable;
+import org.minima.objects.Token;
 import org.minima.objects.TxBlock;
 import org.minima.objects.TxPoW;
 import org.minima.objects.base.MiniData;
@@ -33,7 +34,8 @@ public class TxPoWTreeNode implements Streamable {
 	/**
 	 * The UniqueID for this TxPoWTree
 	 */
-	private MiniData mTxPoWTreeID = MiniData.getRandomData(32);
+	private MiniData mTxPoWTreeID 		= MiniData.getRandomData(32);
+	private boolean  mTxPoWTreeHasState = false;
 	
 	/**
 	 * The SyncBlock that represents this Node
@@ -392,21 +394,49 @@ public class TxPoWTreeNode implements Streamable {
 			
 			//Store the Complete Coin inSQL
 			CoinDB.getTxPoWTreeCoinDB().insertCoin(mTxPoWTreeID, zCoin, getBlockNumber());
-		
+			
+			//Does this coin have state
+			boolean hasstate = zCoin.getState().size()>0 || !zCoin.getTokenID().equals(Token.TOKENID_MINIMA);
+			if(hasstate) {
+				mTxPoWTreeHasState = true;
+			}
+			
 			//Store a trimmed down version in RAM (no state)
 			Coin trimcoin = zCoin.deepCopy();
 			trimcoin.setState(new ArrayList<>());
+			trimcoin.setToken(null);
 			
-			//Add as usual
+			//Add the trimmed version
 			mCoins.add(trimcoin);
 			
 		}else {
-			
 			//Add the full version
 			mCoins.add(zCoin);
 		}
 	}
 	
+	public ArrayList<Coin> getAllCoinsFullState(){
+		
+		//Only bother using DB if there is some state in one of the coins
+		if(GeneralParams.USE_SQL_COINDB && mTxPoWTreeHasState) {
+			
+			MinimaLogger.log("Get ALL coins FULL State use SQLDB.. block:"+getBlockNumber());
+			
+//			try {
+//				throw new Exception("getAllCoinsFullState: STACK TRACE");
+//			}catch(Exception exc) {
+//				exc.printStackTrace();
+//			}
+			
+			return CoinDB.getTxPoWTreeCoinDB().getAllCoins(mTxPoWTreeID);
+		}else {
+			return mCoins;
+		}
+	}
+	
+	public ArrayList<Coin> getAllCoinsMaybeNoState(){
+		return mCoins;
+	}
 	
 	public TxBlock getTxBlock() {
 		return mTxBlock;
@@ -422,21 +452,6 @@ public class TxPoWTreeNode implements Streamable {
 	
 	public MMR getMMR() {
 		return mMMR;
-	}
-	
-	public ArrayList<Coin> getAllCoinsFullState(){
-		
-		MinimaLogger.log("Get ALL coins FULL State..");
-		
-		if(GeneralParams.USE_SQL_COINDB) {
-			return CoinDB.getTxPoWTreeCoinDB().getAllCoins(mTxPoWTreeID);
-		}else {
-			return mCoins;
-		}
-	}
-	
-	public ArrayList<Coin> getAllCoinsMaybeNoState(){
-		return mCoins;
 	}
 	
 	public boolean isRelevantEntry(MMREntryNumber zMMREntryNumber) {
@@ -641,20 +656,24 @@ public class TxPoWTreeNode implements Streamable {
 				//Insert FULL version in DB
 				coindb.insertCoin(mTxPoWTreeID, coin, block);
 				
-				//Store a trimmed down version in RAM (no state)
+				//Does this coin have state or Tokens!
+				boolean hasstate = coin.getState().size()>0 || !coin.getTokenID().equals(Token.TOKENID_MINIMA);
+				if(hasstate) {
+					mTxPoWTreeHasState = true;
+				}
+				
+				//Store a trimmed down version in RAM (no state or TOKEN data)
 				Coin trimcoin = coin.deepCopy();
 				trimcoin.setState(new ArrayList<>());
+				trimcoin.setToken(null);
 				
 				//Add as usual
 				mCoins.add(trimcoin);
 				
 			}else {
-				
 				//Add the full version
 				mCoins.add(coin);
 			}
-			
-			//mCoins.add(Coin.ReadFromStream(zIn));
 		}
 		
 		len = MiniNumber.ReadFromStream(zIn).getAsInt();

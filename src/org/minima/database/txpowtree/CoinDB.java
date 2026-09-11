@@ -116,7 +116,8 @@ public class CoinDB extends SqlDB {
 			//Set main params
 			SQL_INSERT_COIN.setString(1, zTxPoWTreeID.to0xString());
 			SQL_INSERT_COIN.setLong(2, zBlock.getAsLong());
-			SQL_INSERT_COIN.setBytes(3, coindata.getBytes());
+			SQL_INSERT_COIN.setString(3, zCoin.getCoinID().to0xString());
+			SQL_INSERT_COIN.setBytes(4, coindata.getBytes());
 			
 			//Do it.
 			SQL_INSERT_COIN.execute();
@@ -190,7 +191,7 @@ public class CoinDB extends SqlDB {
 			SQL_SELECT_COIN.setString(1, zCoinID.to0xString());
 			
 			//Run the query
-			ResultSet rs = SQL_SELECT_ALLCOINS.executeQuery();
+			ResultSet rs = SQL_SELECT_COIN.executeQuery();
 			
 			//Could be multiple results
 			if(rs.next()) {

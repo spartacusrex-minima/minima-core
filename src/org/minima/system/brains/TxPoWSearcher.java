@@ -246,9 +246,13 @@ public class TxPoWSearcher {
 			}
 		}
 		
-		//Finally - convert the coins..
+		//Relevant coins have ALL the data
+		if(zRelevant) {
+			return finalcoins;
+		}
+		
+		//Normal search needs to convert the coins..
 		return CoinDB.getTxPoWTreeCoinDB().convertNoStateCoins(finalcoins);
-		//return finalcoins;
 	}	
 	
 	public static TxPoWTreeNode getTreeNodeForCoin(MiniData zCoinID) {
@@ -549,7 +553,7 @@ public class TxPoWSearcher {
 			while(tip != null) {
 	
 				//Get ALL the coins..
-				ArrayList<Coin> coins = tip.getAllCoinsMaybeNoState();
+				ArrayList<Coin> coins = tip.getAllCoinsFullState();
 				
 				//Get the details..
 				for(Coin coin : coins) {
@@ -619,7 +623,7 @@ public class TxPoWSearcher {
 			//Get ALL the coins..
 			ArrayList<Coin> coins = null;
 			if(!MEGACHECK) {
-				coins = tip.getAllCoinsMaybeNoState();
+				coins = tip.getAllCoinsFullState();
 			}else {
 				//Need to LOCK DB
 				MinimaDB.getDB().readLock(true);

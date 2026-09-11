@@ -89,6 +89,11 @@ public class Coin implements Streamable {
 	Token mToken = null;
 	
 	/**
+	 * TEMP var used in SQLCOINDB
+	 */
+	//public boolean mSQLHasState = false;
+	
+	/**
 	 * Main Constructor
 	 */
 	public Coin(MiniData zAddress, MiniNumber zAmount, MiniData zTokenID) {
