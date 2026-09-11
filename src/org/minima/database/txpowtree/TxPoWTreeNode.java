@@ -369,7 +369,7 @@ public class TxPoWTreeNode implements Streamable {
 		mComputedRelevantCoins = new ArrayList<>();
 		
 		//Get all the coins in this TxPoWTree
-		ArrayList<Coin> coins = getAllCoins();
+		ArrayList<Coin> coins = getAllCoinsFullState();
 		
 		//Cycle through both lists..
 		for(Coin coin : coins) {
@@ -389,8 +389,20 @@ public class TxPoWTreeNode implements Streamable {
 		
 		//Are we using SQL ?
 		if(GeneralParams.USE_SQL_COINDB) {
+			
+			//Store the Complete Coin inSQL
 			CoinDB.getTxPoWTreeCoinDB().insertCoin(mTxPoWTreeID, zCoin, getBlockNumber());
+		
+			//Store a trimmed down version in RAM (no state)
+			Coin trimcoin = zCoin.deepCopy();
+			trimcoin.setState(new ArrayList<>());
+			
+			//Add as usual
+			mCoins.add(trimcoin);
+			
 		}else {
+			
+			//Add the full version
 			mCoins.add(zCoin);
 		}
 	}
@@ -412,13 +424,19 @@ public class TxPoWTreeNode implements Streamable {
 		return mMMR;
 	}
 	
-	public ArrayList<Coin> getAllCoins(){
+	public ArrayList<Coin> getAllCoinsFullState(){
+		
+		MinimaLogger.log("Get ALL coins FULL State..");
 		
 		if(GeneralParams.USE_SQL_COINDB) {
 			return CoinDB.getTxPoWTreeCoinDB().getAllCoins(mTxPoWTreeID);
 		}else {
 			return mCoins;
 		}
+	}
+	
+	public ArrayList<Coin> getAllCoinsMaybeNoState(){
+		return mCoins;
 	}
 	
 	public boolean isRelevantEntry(MMREntryNumber zMMREntryNumber) {
@@ -585,7 +603,7 @@ public class TxPoWTreeNode implements Streamable {
 		mMMR.writeDataStream(zOut);
 		
 		//Get all the coins..
-		ArrayList<Coin> allcoins = getAllCoins();
+		ArrayList<Coin> allcoins = getAllCoinsFullState();
 		
 		int len = allcoins.size();
 		MiniNumber.WriteToStream(zOut, len);
@@ -617,9 +635,22 @@ public class TxPoWTreeNode implements Streamable {
 		for(int i=0;i<len;i++) {
 			Coin coin = Coin.ReadFromStream(zIn);
 			
+			//Are we using low ram..
 			if(GeneralParams.USE_SQL_COINDB) {
+				
+				//Insert FULL version in DB
 				coindb.insertCoin(mTxPoWTreeID, coin, block);
+				
+				//Store a trimmed down version in RAM (no state)
+				Coin trimcoin = coin.deepCopy();
+				trimcoin.setState(new ArrayList<>());
+				
+				//Add as usual
+				mCoins.add(trimcoin);
+				
 			}else {
+				
+				//Add the full version
 				mCoins.add(coin);
 			}
 			

@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import org.minima.objects.Coin;
 import org.minima.objects.base.MiniData;
 import org.minima.objects.base.MiniNumber;
+import org.minima.system.params.GeneralParams;
 import org.minima.utils.MinimaLogger;
 import org.minima.utils.SqlDB;
 
@@ -28,6 +29,7 @@ public class CoinDB extends SqlDB {
 	 */
 	PreparedStatement SQL_INSERT_COIN 				= null;
 	PreparedStatement SQL_SELECT_ALLCOINS 			= null;
+	PreparedStatement SQL_SELECT_COIN 				= null;
 	PreparedStatement SQL_CLEAR_COINS 				= null;
 	PreparedStatement SQL_SIZE 						= null;
 	
@@ -58,6 +60,7 @@ public class CoinDB extends SqlDB {
 						+ "  `id` bigint auto_increment,"
 						+ "  `txpowtreeid` varchar(80) NOT NULL,"
 						+ "  `blockheight` int NOT NULL,"
+						+ "  `coinid` varchar(80) NOT NULL,"
 						+ "  `coindata` blob NOT NULL"
 						+ ")";
 		
@@ -68,8 +71,9 @@ public class CoinDB extends SqlDB {
 		stmt.close();
 	
 		//Prepared Statements
-		SQL_INSERT_COIN	 	= mSQLConnection.prepareStatement("INSERT INTO coins ( txpowtreeid, blockheight, coindata ) VALUES ( ?, ?, ? )");
+		SQL_INSERT_COIN	 	= mSQLConnection.prepareStatement("INSERT INTO coins ( txpowtreeid, blockheight, coinid, coindata ) VALUES ( ?, ?, ?, ? )");
 		SQL_SELECT_ALLCOINS = mSQLConnection.prepareStatement("SELECT * FROM coins WHERE txpowtreeid=?");
+		SQL_SELECT_COIN 	= mSQLConnection.prepareStatement("SELECT * FROM coins WHERE coinid=?");
 		SQL_CLEAR_COINS 	= mSQLConnection.prepareStatement("DELETE FROM coins WHERE blockheight<?");
 		SQL_SIZE 			= mSQLConnection.prepareStatement("SELECT Count(*) as tot FROM coins");
 	}
@@ -170,6 +174,47 @@ public class CoinDB extends SqlDB {
 		return coins;
 	}
 	
+	public synchronized Coin getCoin(MiniData zCoinID) {
+		
+		try {
+			
+			//Make sure..
+			if(checkOpen()) {
+				MinimaLogger.log("getCoin CoinDB reopen required");
+			}
+			
+			//Get the Query ready
+			SQL_SELECT_COIN.clearParameters();
+		
+			//Set main params
+			SQL_SELECT_COIN.setString(1, zCoinID.to0xString());
+			
+			//Run the query
+			ResultSet rs = SQL_SELECT_ALLCOINS.executeQuery();
+			
+			//Could be multiple results
+			if(rs.next()) {
+				
+				//Get the blob of data
+				byte[] coindata = rs.getBytes("coindata");
+				
+				//Create MiniData version
+				MiniData minicoin = new MiniData(coindata);
+				
+				//Convert into a Coin..
+				Coin cc = Coin.convertMiniDataVersion(minicoin);
+				
+				//Return this coin - there may be more than one but they are all the same
+				return cc;
+			}
+			
+		} catch (SQLException e) {
+			MinimaLogger.log(e);
+		}
+		
+		return null;
+	}
+	
 	public synchronized void clearOldCoins(long zMinimumBlock) {
 		
 		try {
@@ -218,5 +263,28 @@ public class CoinDB extends SqlDB {
 		
 		//Error has occurred
 		return -1;
+	}
+	
+	//Convert coins to their FULL details
+	public ArrayList<Coin> convertNoStateCoins(ArrayList<Coin> zNoStateCoins) {
+		
+		//Are we even scrapping state out.. ?
+		if(!GeneralParams.USE_SQL_COINDB) {
+			return zNoStateCoins;
+		}
+		
+		//Find the orginal coins
+		ArrayList<Coin> fullcoins = new ArrayList<>();
+		
+		for(Coin cc : zNoStateCoins) {
+			
+			//Get the original..
+			Coin fullcoin = getCoin(cc.getCoinID());
+		
+			//Add to our list
+			fullcoins.add(fullcoin);
+		}
+		
+		return fullcoins;
 	}
 }

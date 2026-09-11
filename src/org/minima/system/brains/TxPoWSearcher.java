@@ -5,6 +5,7 @@ import java.util.HashSet;
 
 import org.minima.database.MinimaDB;
 import org.minima.database.txpowdb.TxPoWDB;
+import org.minima.database.txpowtree.CoinDB;
 import org.minima.database.txpowtree.TxPoWTreeNode;
 import org.minima.database.wallet.Wallet;
 import org.minima.objects.Coin;
@@ -147,7 +148,7 @@ public class TxPoWSearcher {
 				if(zRelevant) {
 					coins = tip.getRelevantCoins();
 				}else {
-					coins = tip.getAllCoins();
+					coins = tip.getAllCoinsMaybeNoState();
 				}
 			}else {
 				//Need to LOCK DB
@@ -177,8 +178,11 @@ public class TxPoWSearcher {
 					continue;
 				}
 				
-				if(zCheckState && !coin.checkForStateVariable(zState,zWildCardState)) {
-					continue;
+				//ONLY available in FULL RAM mode..
+				if(!GeneralParams.USE_SQL_COINDB) {
+					if(zCheckState && !coin.checkForStateVariable(zState,zWildCardState)) {
+						continue;
+					}
 				}
 				
 				//Get the CoinID
@@ -242,7 +246,9 @@ public class TxPoWSearcher {
 			}
 		}
 		
-		return finalcoins;
+		//Finally - convert the coins..
+		return CoinDB.getTxPoWTreeCoinDB().convertNoStateCoins(finalcoins);
+		//return finalcoins;
 	}	
 	
 	public static TxPoWTreeNode getTreeNodeForCoin(MiniData zCoinID) {
@@ -254,7 +260,7 @@ public class TxPoWSearcher {
 		while(tip != null) {
 
 			//Get ALL the coins..
-			ArrayList<Coin> coins = tip.getAllCoins();
+			ArrayList<Coin> coins = tip.getAllCoinsMaybeNoState();
 			
 			//Get the details..
 			for(Coin coin : coins) {
@@ -363,7 +369,7 @@ public class TxPoWSearcher {
 		while(tip != null) {
 
 			//Get ALL the coins..
-			ArrayList<Coin> coins = tip.getAllCoins();
+			ArrayList<Coin> coins = tip.getAllCoinsMaybeNoState();
 			
 			//Get the details..
 			for(Coin coin : coins) {
@@ -543,7 +549,7 @@ public class TxPoWSearcher {
 			while(tip != null) {
 	
 				//Get ALL the coins..
-				ArrayList<Coin> coins = tip.getAllCoins();
+				ArrayList<Coin> coins = tip.getAllCoinsMaybeNoState();
 				
 				//Get the details..
 				for(Coin coin : coins) {
@@ -613,7 +619,7 @@ public class TxPoWSearcher {
 			//Get ALL the coins..
 			ArrayList<Coin> coins = null;
 			if(!MEGACHECK) {
-				coins = tip.getAllCoins();
+				coins = tip.getAllCoinsMaybeNoState();
 			}else {
 				//Need to LOCK DB
 				MinimaDB.getDB().readLock(true);

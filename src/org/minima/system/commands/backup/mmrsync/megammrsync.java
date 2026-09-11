@@ -442,7 +442,7 @@ public class megammrsync extends Command {
 			if(!MEGACHECK) {
 				
 				//Get the Relevant coins..
-				coins = tip.getAllCoins();
+				coins = tip.getAllCoinsFullState();
 				
 			}else {
 				
