@@ -399,7 +399,7 @@ public class TxPoWTreeNode implements Streamable {
 		//Store the Complete Coin in SQL
 		CoinDB.getTxPoWTreeCoinDB().insertCoin(mTxPoWTreeID, zCoin, zBlocknumber);
 		
-		//Store a trimmed down version in RAM (only minima & no state)
+		//Store a trimmed down version in RAM
 		Coin trimcoin = zCoin.deepCopy();
 		trimcoin.setState(new ArrayList<>());
 		trimcoin.setToken(null);

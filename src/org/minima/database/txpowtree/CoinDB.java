@@ -272,7 +272,7 @@ public class CoinDB extends SqlDB {
 	}
 	
 	//Convert coins to their FULL details
-	public ArrayList<Coin> convertNoStateCoins(ArrayList<Coin> zNoStateCoins) {
+	public ArrayList<Coin> convertNoStateCoinsCopy(ArrayList<Coin> zNoStateCoins) {
 		
 		//Are we even scraping state out.. ?
 		if(!GeneralParams.USE_SQL_COINDB) {
@@ -287,13 +287,12 @@ public class CoinDB extends SqlDB {
 			//Get the FULL Coin Details
 			Coin fullcoin = getCoin(cc.getCoinID());
 			
-			//Make a copy - with correct state and token
-			Coin newcoin = cc.deepCopy();
-			newcoin.setState(fullcoin.getState());
-			newcoin.setToken(fullcoin.getToken());
+			//Set correct state and token
+			cc.setState(fullcoin.getState());
+			cc.setToken(fullcoin.getToken());
 			
 			//A normal coin.. just add..
-			fullcoins.add(newcoin);
+			fullcoins.add(cc);
 		}
 		
 		return fullcoins;

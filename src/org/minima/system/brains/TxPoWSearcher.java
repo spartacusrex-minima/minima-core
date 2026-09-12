@@ -257,7 +257,7 @@ public class TxPoWSearcher {
 		}
 		
 		//Normal search needs to convert the coins..
-		return CoinDB.getTxPoWTreeCoinDB().convertNoStateCoins(finalcoins);
+		return CoinDB.getTxPoWTreeCoinDB().convertNoStateCoinsCopy(finalcoins);
 	}	
 	
 	public static TxPoWTreeNode getTreeNodeForCoin(MiniData zCoinID) {
