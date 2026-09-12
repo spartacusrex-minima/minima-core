@@ -387,27 +387,38 @@ public class TxPoWTreeNode implements Streamable {
 		}
 	}
 	
+	private void addSQLDBCoin(Coin zCoin, MiniNumber zBlocknumber) {
+		
+		//Does this coin have state or token details
+		boolean hasstate = (zCoin.getState().size()>0) || !zCoin.getTokenID().equals(Token.TOKENID_MINIMA);
+		if(hasstate) {
+			mTxPoWTreeHasState = true;
+		}
+		
+		//Set the Coin TEMP var
+		zCoin.mSQLDBCoinHasState = hasstate;
+		
+		//Store the Complete Coin in SQL
+		if(hasstate) {
+			CoinDB.getTxPoWTreeCoinDB().insertCoin(mTxPoWTreeID, zCoin, zBlocknumber);
+		}
+		
+		//Store a trimmed down version in RAM (only minima & no state)
+		Coin trimcoin = zCoin.deepCopy();
+		trimcoin.setState(new ArrayList<>());
+		trimcoin.setToken(null);
+		
+		//Add the trimmed version
+		mCoins.add(trimcoin);
+	}
+	
 	public void addCoinToNode(Coin zCoin) {
 		
 		//Are we using SQL ?
 		if(GeneralParams.USE_SQL_COINDB) {
 			
-			//Store the Complete Coin inSQL
-			CoinDB.getTxPoWTreeCoinDB().insertCoin(mTxPoWTreeID, zCoin, getBlockNumber());
-			
-			//Does this coin have state
-			boolean hasstate = zCoin.getState().size()>0 || !zCoin.getTokenID().equals(Token.TOKENID_MINIMA);
-			if(hasstate) {
-				mTxPoWTreeHasState = true;
-			}
-			
-			//Store a trimmed down version in RAM (no state)
-			Coin trimcoin = zCoin.deepCopy();
-			trimcoin.setState(new ArrayList<>());
-			trimcoin.setToken(null);
-			
-			//Add the trimmed version
-			mCoins.add(trimcoin);
+			//Add this to the SQLDB if necessary
+			addSQLDBCoin(zCoin, getBlockNumber());
 			
 		}else {
 			//Add the full version
@@ -421,14 +432,10 @@ public class TxPoWTreeNode implements Streamable {
 		if(GeneralParams.USE_SQL_COINDB && mTxPoWTreeHasState) {
 			
 			MinimaLogger.log("Get ALL coins FULL State use SQLDB.. block:"+getBlockNumber());
+		
+			//Return the complete set..
+			return CoinDB.getTxPoWTreeCoinDB().convertNoStateCoins(mCoins);
 			
-//			try {
-//				throw new Exception("getAllCoinsFullState: STACK TRACE");
-//			}catch(Exception exc) {
-//				exc.printStackTrace();
-//			}
-			
-			return CoinDB.getTxPoWTreeCoinDB().getAllCoins(mTxPoWTreeID);
 		}else {
 			return mCoins;
 		}
@@ -653,22 +660,8 @@ public class TxPoWTreeNode implements Streamable {
 			//Are we using low ram..
 			if(GeneralParams.USE_SQL_COINDB) {
 				
-				//Insert FULL version in DB
-				coindb.insertCoin(mTxPoWTreeID, coin, block);
-				
-				//Does this coin have state or Tokens!
-				boolean hasstate = coin.getState().size()>0 || !coin.getTokenID().equals(Token.TOKENID_MINIMA);
-				if(hasstate) {
-					mTxPoWTreeHasState = true;
-				}
-				
-				//Store a trimmed down version in RAM (no state or TOKEN data)
-				Coin trimcoin = coin.deepCopy();
-				trimcoin.setState(new ArrayList<>());
-				trimcoin.setToken(null);
-				
-				//Add as usual
-				mCoins.add(trimcoin);
+				//Add this to the SQLDB if necessary
+				addSQLDBCoin(coin, block);
 				
 			}else {
 				//Add the full version

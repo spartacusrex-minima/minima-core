@@ -246,6 +246,11 @@ public class TxPoWSearcher {
 			}
 		}
 		
+		//If we are not using the SQLDBCoins..
+		if(!GeneralParams.USE_SQL_COINDB) {
+			return finalcoins;
+		}
+		
 		//Relevant coins have ALL the data
 		if(zRelevant) {
 			return finalcoins;

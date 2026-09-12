@@ -8,6 +8,7 @@ import java.sql.Statement;
 import java.util.ArrayList;
 
 import org.minima.objects.Coin;
+import org.minima.objects.Token;
 import org.minima.objects.base.MiniData;
 import org.minima.objects.base.MiniNumber;
 import org.minima.system.params.GeneralParams;
@@ -101,6 +102,8 @@ public class CoinDB extends SqlDB {
 	
 	public synchronized boolean insertCoin(MiniData zTxPoWTreeID, Coin zCoin, MiniNumber zBlock) {
 		try {
+			
+			MinimaLogger.log("SQLDBCOIN - insertCoin : "+zCoin.toJSON());
 			
 			//Make sure..
 			if(checkOpen()) {
@@ -205,6 +208,8 @@ public class CoinDB extends SqlDB {
 				//Convert into a Coin..
 				Coin cc = Coin.convertMiniDataVersion(minicoin);
 				
+				MinimaLogger.log("SQLDBCOIN - getCoin : "+cc.toJSON());
+				
 				//Return this coin - there may be more than one but they are all the same
 				return cc;
 			}
@@ -269,21 +274,30 @@ public class CoinDB extends SqlDB {
 	//Convert coins to their FULL details
 	public ArrayList<Coin> convertNoStateCoins(ArrayList<Coin> zNoStateCoins) {
 		
-		//Are we even scrapping state out.. ?
+		//Are we even scraping state out.. ?
 		if(!GeneralParams.USE_SQL_COINDB) {
 			return zNoStateCoins;
 		}
 		
-		//Find the orginal coins
+		//Find the original coins
 		ArrayList<Coin> fullcoins = new ArrayList<>();
 		
 		for(Coin cc : zNoStateCoins) {
 			
-			//Get the original..
-			Coin fullcoin = getCoin(cc.getCoinID());
-		
-			//Add to our list
-			fullcoins.add(fullcoin);
+			//Are they stateless minima..
+			if(cc.mSQLDBCoinHasState) {
+				
+				//Get the original FULL STATE..
+				Coin fullcoin = getCoin(cc.getCoinID());
+			
+				//Add to our list
+				fullcoins.add(fullcoin);
+				
+			}else {
+				
+				//A normal coin.. just add..
+				fullcoins.add(cc);
+			}
 		}
 		
 		return fullcoins;
