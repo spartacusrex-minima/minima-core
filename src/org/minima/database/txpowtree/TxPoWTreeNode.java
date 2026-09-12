@@ -93,7 +93,9 @@ public class TxPoWTreeNode implements Streamable {
 	public TxPoWTreeNode(TxBlock zTxBlock, boolean zFindRelevant) {
 		
 		//Make sure is in TxBlockDB
-		MinimaDB.getDB().getTxBlockDB().addTxBlock(zTxBlock);
+		if(!zTxBlock.getTxPoW().getTxPoWID().equals("0x00")) {
+			MinimaDB.getDB().getTxBlockDB().addTxBlock(zTxBlock);
+		}
 		
 		//Store the ID
 		mTxBlockTxPowID 	= zTxBlock.getTxPoW().getTxPoWID();
@@ -107,7 +109,7 @@ public class TxPoWTreeNode implements Streamable {
 		mHaveCheckedFull 	= false;
 		
 		//Construct the MMR..
-		constructMMR(zFindRelevant);
+		constructMMR(zFindRelevant, zTxBlock);
 	}
 	
 //	//Used in tests..
@@ -122,10 +124,10 @@ public class TxPoWTreeNode implements Streamable {
 	/**
 	 * Convert the TxBlock 
 	 */
-	private void constructMMR(boolean zFindRelevant) {
+	private void constructMMR(boolean zFindRelevant, TxBlock zTxBlock) {
 		
 		//Get the TxBlock
-		TxBlock tTxBlock = getTxBlock();
+		TxBlock tTxBlock = zTxBlock;
 		
 		//What Block Time Are we..
 		MiniNumber block = tTxBlock.getTxPoW().getBlockNumber();

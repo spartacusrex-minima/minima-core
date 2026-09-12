@@ -1,68 +1,187 @@
 package org.minima.database.archive;
 
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.minima.objects.TxBlock;
+import org.minima.objects.base.MiniData;
 import org.minima.objects.base.MiniNumber;
+import org.minima.utils.MinimaLogger;
+import org.minima.utils.SqlDB;
 
-public class TxBlockDB {
+public class TxBlockDB extends SqlDB {
 	
-	ConcurrentHashMap<String, TxBlock> mTxBlockDB;
+	PreparedStatement SQL_INSERT_SYNCBLOCK 		= null;
+	PreparedStatement SQL_FIND_SYNCBLOCK 		= null;
+	PreparedStatement SQL_FIND_CHILDREN 		= null;
+	
+	TxBlock mLastGetBlock = null;
+	TxBlock mLastAddBlock = null;
 	
 	public TxBlockDB() {
-		mTxBlockDB = new ConcurrentHashMap<>();
+		super();
+	}
+	
+	@Override
+	protected void createSQL() throws SQLException {
+		
+		//Create the various tables..
+		Statement stmt = mSQLConnection.createStatement();
+		
+		//Create main table
+		String create = "CREATE TABLE IF NOT EXISTS `syncblock` ("
+						+ "  `id` bigint auto_increment,"
+						+ "  `txpowid` varchar(80) NOT NULL UNIQUE,"
+						+ "  `parentid` varchar(80) NOT NULL,"
+						+ "  `block` bigint NOT NULL,"
+						+ "  `txblock` blob NOT NULL"
+						+ ")";
+		
+		//Run it..
+		stmt.execute(create);
+		
+		//All done..
+		stmt.close();
+		
+		//Create some prepared statements..
+		String insert 			= "INSERT IGNORE INTO syncblock ( txpowid, parentid, block, txblock ) VALUES ( ?, ?, ? ,? )";
+		SQL_INSERT_SYNCBLOCK 	= mSQLConnection.prepareStatement(insert);
+		SQL_FIND_SYNCBLOCK 		= mSQLConnection.prepareStatement("SELECT txblock FROM syncblock WHERE txpowid=?");
+		SQL_FIND_CHILDREN 		= mSQLConnection.prepareStatement("SELECT txblock FROM syncblock WHERE parentid=?");
 	}
 	
 	public synchronized void addTxBlock(TxBlock zTxBlock) {
-		mTxBlockDB.put(zTxBlock.getTxPoW().getTxPoWID(), zTxBlock);
+		
+		//Nice optimisation
+		if(mLastAddBlock != null) {
+			if(mLastAddBlock.getTxPoW().getTxPoWID().equals(zTxBlock.getTxPoW().getTxPoWID())) {
+				//Allready added!
+				return;
+			}
+		}
+		
+		//Store for later
+		mLastAddBlock = zTxBlock;
+		
+		MinimaLogger.log("TxBlockDB AddBlock "+zTxBlock.getTxPoW().getBlockNumber()+" "+zTxBlock.getTxPoW().getTxPoWID());
+		
+		try {
+			//Make sure..
+			checkOpen();
+		
+			//get the MiniData version..
+			MiniData txblockdata = MiniData.getMiniDataVersion(zTxBlock);
+			
+			//Get the Query ready
+			SQL_INSERT_SYNCBLOCK.clearParameters();
+		
+			//Set main params
+			SQL_INSERT_SYNCBLOCK.setString(1, zTxBlock.getTxPoW().getTxPoWID());
+			SQL_INSERT_SYNCBLOCK.setString(2, zTxBlock.getTxPoW().getParentID().to0xString());
+			SQL_INSERT_SYNCBLOCK.setLong(3, zTxBlock.getTxPoW().getBlockNumber().getAsLong());
+			SQL_INSERT_SYNCBLOCK.setBytes(4, txblockdata.getBytes());
+			
+			//Do it.
+			SQL_INSERT_SYNCBLOCK.execute();
+			
+		}catch (SQLException e) {
+			MinimaLogger.log(e);
+		}		
 	}
 	
-	public synchronized TxBlock getTxBlock(String zTxPowID) {
-		return mTxBlockDB.get(zTxPowID);
+	public synchronized TxBlock getTxBlock(String zTxPoWID) {
+		
+		//Nice optimisation
+		if(mLastGetBlock != null) {
+			if(mLastGetBlock.getTxPoW().getTxPoWID().equals(zTxPoWID)) {
+				return mLastGetBlock;
+			}
+		}
+		
+		MinimaLogger.log("TxBlockDB GetBlock "+zTxPoWID);
+		
+		try {
+			
+			//Make sure..
+			checkOpen();
+		
+			//Set search params
+			SQL_FIND_SYNCBLOCK.clearParameters();
+			SQL_FIND_SYNCBLOCK.setString(1, zTxPoWID);
+			
+			//Run the query
+			ResultSet rs = SQL_FIND_SYNCBLOCK.executeQuery();
+			
+			//Is there a valid result.. ?
+			if(rs.next()) {
+				
+				//Get the details..
+				byte[] syncdata 	= rs.getBytes("txblock");
+				
+				//Create MiniData version
+				MiniData minisync = new MiniData(syncdata);
+				
+				//Convert
+				TxBlock sb = TxBlock.convertMiniDataVersion(minisync);
+				
+				//SAVE IT
+				mLastGetBlock = sb;
+				
+				return sb;
+			}
+			
+		} catch (SQLException e) {
+			MinimaLogger.log(e);
+		}
+		
+		return null;
 	}
 	
 	public synchronized ArrayList<TxBlock> getChildBlocks(String zTxPowID){
 		
+		MinimaLogger.log("TxBlockDB GetChildBlock "+zTxPowID);
+		
 		ArrayList<TxBlock> ret = new ArrayList<>();
 		
-		//Cycle through the blocks..
-		Enumeration<TxBlock> allblocks = mTxBlockDB.elements();
-		while(allblocks.hasMoreElements()) {
+		try {
 			
-			TxBlock txblock = allblocks.nextElement();
+			//Make sure..
+			checkOpen();
+		
+			//Set search params
+			SQL_FIND_CHILDREN.clearParameters();
+			SQL_FIND_CHILDREN.setString(1, zTxPowID);
 			
-			//Is it a child..
-			if(txblock.getTxPoW().getParentID().to0xString().equals(zTxPowID)) {
-				ret.add(txblock);
+			//Run the query
+			ResultSet rs = SQL_FIND_CHILDREN.executeQuery();
+			
+			//Is there a valid result.. ?
+			while(rs.next()) {
+				
+				//Get the details..
+				byte[] syncdata 	= rs.getBytes("txblock");
+				
+				//Create MiniData version
+				MiniData minisync = new MiniData(syncdata);
+				
+				//Convert
+				TxBlock sb = TxBlock.convertMiniDataVersion(minisync);
+				
+				ret.add(sb);
 			}
+			
+		} catch (SQLException e) {
+			MinimaLogger.log(e);
 		}
 		
 		return ret;
 	}
 	
-//	public synchronized void clearAll() {
-//		mTxBlockDB.clear();
-//	}
-	
 	public synchronized void clearOld(MiniNumber zMinBlock) {
-	
-		int oldsize = mTxBlockDB.size();
 		
-		ConcurrentHashMap<String, TxBlock> newDB = new ConcurrentHashMap();
-		
-		Enumeration<TxBlock> allblocks = mTxBlockDB.elements();
-		while(allblocks.hasMoreElements()) {
-			
-			TxBlock txblock = allblocks.nextElement();
-			
-			if(txblock.getTxPoW().getBlockNumber().isMoreEqual(zMinBlock)) {
-				newDB.put(txblock.getTxPoW().getTxPoWID(), txblock);
-			}
-		}
-		
-		mTxBlockDB = newDB;
-//		MinimaLogger.log("Clear TxBlockDB new size : "+mTxBlockDB.size()+" / "+oldsize);
 	}
+	
 }

@@ -245,27 +245,32 @@ public class ArchiveManager extends SqlDB {
 		return null;
 	}
 	
-	public synchronized boolean saveBlock(TxBlock zBlock) throws SQLException {
-		
-		//Make sure..
-		checkOpen();
+	public synchronized boolean saveBlock(TxBlock zBlock) {
 	
-		//get the MiniData version..
-		MiniData syncdata = MiniData.getMiniDataVersion(zBlock);
+		try {
+			//Make sure..
+			checkOpen();
 		
-		//Get the Query ready
-		SQL_INSERT_SYNCBLOCK.clearParameters();
-	
-		//Set main params
-		SQL_INSERT_SYNCBLOCK.setString(1, zBlock.getTxPoW().getTxPoWID());
-		SQL_INSERT_SYNCBLOCK.setLong(2, zBlock.getTxPoW().getBlockNumber().getAsLong());
-		SQL_INSERT_SYNCBLOCK.setLong(3, System.currentTimeMillis());
+			//get the MiniData version..
+			MiniData syncdata = MiniData.getMiniDataVersion(zBlock);
+			
+			//Get the Query ready
+			SQL_INSERT_SYNCBLOCK.clearParameters();
 		
-		//And finally the actual bytes
-		SQL_INSERT_SYNCBLOCK.setBytes(4, syncdata.getBytes());
-		
-		//Do it.
-		SQL_INSERT_SYNCBLOCK.execute();
+			//Set main params
+			SQL_INSERT_SYNCBLOCK.setString(1, zBlock.getTxPoW().getTxPoWID());
+			SQL_INSERT_SYNCBLOCK.setLong(2, zBlock.getTxPoW().getBlockNumber().getAsLong());
+			SQL_INSERT_SYNCBLOCK.setLong(3, System.currentTimeMillis());
+			
+			//And finally the actual bytes
+			SQL_INSERT_SYNCBLOCK.setBytes(4, syncdata.getBytes());
+			
+			//Do it.
+			SQL_INSERT_SYNCBLOCK.execute();
+			
+		}catch (SQLException e) {
+			MinimaLogger.log(e);
+		}
 		
 		return true;		
 	}
@@ -305,76 +310,6 @@ public class ArchiveManager extends SqlDB {
 		
 		return null;
 	}
-	
-//	public synchronized TxBlock loadFirstBlock() {
-//		
-//		try {
-//			
-//			//Make sure..
-//			checkOpen();
-//		
-//			//Set search params
-//			SQL_SELECT_FIRST.clearParameters();
-//			
-//			//Run the query
-//			ResultSet rs = SQL_SELECT_FIRST.executeQuery();
-//			
-//			//Is there a valid result.. ?
-//			if(rs.next()) {
-//				
-//				//Get the details..
-//				byte[] syncdata 	= rs.getBytes("syncdata");
-//				
-//				//Create MiniData version
-//				MiniData minisync = new MiniData(syncdata);
-//				
-//				//Convert
-//				TxBlock sb = TxBlock.convertMiniDataVersion(minisync);
-//				
-//				return sb;
-//			}
-//			
-//		} catch (SQLException e) {
-//			MinimaLogger.log(e);
-//		}
-//		
-//		return null;
-//	}
-//
-//	public synchronized TxBlock loadLastBlock() {
-//		
-//		try {
-//			
-//			//Make sure..
-//			checkOpen();
-//		
-//			//Set search params
-//			SQL_SELECT_LAST.clearParameters();
-//			
-//			//Run the query
-//			ResultSet rs = SQL_SELECT_LAST.executeQuery();
-//			
-//			//Is there a valid result.. ?
-//			if(rs.next()) {
-//				
-//				//Get the details..
-//				byte[] syncdata 	= rs.getBytes("syncdata");
-//				
-//				//Create MiniData version
-//				MiniData minisync = new MiniData(syncdata);
-//				
-//				//Convert
-//				TxBlock sb = TxBlock.convertMiniDataVersion(minisync);
-//				
-//				return sb;
-//			}
-//			
-//		} catch (SQLException e) {
-//			MinimaLogger.log(e);
-//		}
-//		
-//		return null;
-//	}
 	
 	public synchronized TxBlock loadFirstBlock() {
 		

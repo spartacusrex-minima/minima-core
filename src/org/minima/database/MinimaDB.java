@@ -86,6 +86,8 @@ public class MinimaDB {
 		mCascade	= new Cascade();
 		mUserDB		= new UserDB();
 		mWallet		= new Wallet();
+		
+		//Fast Archive DB
 		mTxBlockDB	= new TxBlockDB();
 		
 		//The P2P
@@ -377,6 +379,11 @@ public class MinimaDB {
 			MiniFile.deleteFileOrFolder(coindbsqlfolder.getAbsolutePath(), coindbsqlfolder);
 			CoinDB.createCoinDB(new File(coindbsqlfolder,"coins.db"));
 			
+			//The TxBlock specific DB
+			File txblocksqlfolder = new File(basedb,"txblockdb");
+			MiniFile.deleteFileOrFolder(txblocksqlfolder.getAbsolutePath(), txblocksqlfolder);
+			mTxBlockDB.loadDB(new File(txblocksqlfolder,"txblock.db"));
+			
 			//Load the Cascade
 			mCascade.loadDB(new File(basedb,"cascade.db"));
 			
@@ -586,6 +593,10 @@ public class MinimaDB {
 			mTxPoWDB.saveDB(zCompact);
 			MinimaLogger.log("ArchiveDB shutdown..");
 			mArchive.saveDB(zCompact);
+			
+			//Shut this down..
+			MinimaLogger.log("TxBlockDB shutdown..");
+			mTxBlockDB.saveDB(false);
 			
 			//Close the CoinDB
 			MinimaLogger.log("CoinDB shutdown..");
