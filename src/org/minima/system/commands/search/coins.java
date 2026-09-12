@@ -248,7 +248,7 @@ public class coins extends Command {
 		}
 		
 		//Current block needed for age
-		MiniNumber cblock = tip.getTxPoW().getBlockNumber();
+		MiniNumber cblock = tip.getBlockNumber();
 		
 		//Put it all in an array
 		JSONArray coinarr = new JSONArray();

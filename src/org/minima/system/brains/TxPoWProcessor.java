@@ -559,7 +559,7 @@ public class TxPoWProcessor extends MessageProcessor {
 				TxPoWTreeNode tip = txptree.getTip();
 				
 				//get the new root..
-				TxPoWTreeNode newroot = tip.getPastNode(tip.getTxPoW().getBlockNumber().sub(GlobalParams.MINIMA_CASCADE_START_DEPTH).increment()); 
+				TxPoWTreeNode newroot = tip.getPastNode(tip.getBlockNumber().sub(GlobalParams.MINIMA_CASCADE_START_DEPTH).increment()); 
 				
 				//Now copy all the MMR Coins.. 
 				newroot.copyParentRelevantCoins();
@@ -646,7 +646,7 @@ public class TxPoWProcessor extends MessageProcessor {
 			
 			//Has the tip changed..
 			if(currenttip!=null && newtipnode!=null) {
-				if(!currenttip.getTxPowIDData().isEqual(newtipnode.getTxPowIDData())) {
+				if(!currenttip.getTxPoWIDData().isEqual(newtipnode.getTxPoWIDData())) {
 					Main.getInstance().PostMessage(new Message(Main.MAIN_NEWBLOCK).addObject("txpow", newtipnode.getTxPoW()));
 				}
 			}
@@ -802,7 +802,7 @@ public class TxPoWProcessor extends MessageProcessor {
 						if(GeneralParams.TEST_PARAMS) {
 							notxblocktimediff = new MiniNumber(1000 * 60 * 5);
 						}
-						if(txptree.getTip().getTxPoW().getTimeMilli().sub(timenow).abs().isLess(notxblocktimediff)) {
+						if(txptree.getTip().getTimeMilli().sub(timenow).abs().isLess(notxblocktimediff)) {
 							MinimaLogger.log("Your chain tip is up to date - no TxBlocks accepted - only FULL TxPoW");
 							
 							//we are not syncing..

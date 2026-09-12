@@ -37,15 +37,12 @@ public class block extends Command {
 		if(tip == null) {
 			throw new CommandException("NO Blocks yet..");
 		}
-		
-		//Get the top block
-		TxPoW topblock 		= tip.getTxPoW();
-		
+				
 		JSONObject resp = new JSONObject();
-		resp.put("block", topblock.getBlockNumber().toString());
-		resp.put("hash", topblock.getTxPoWID());
-		resp.put("timemilli", topblock.getTimeMilli().toString());
-		resp.put("date", new Date(topblock.getTimeMilli().getAsLong()).toString());
+		resp.put("block", tip.getBlockNumber().toString());
+		resp.put("hash", tip.getTxPoWID());
+		resp.put("timemilli", tip.getTimeMilli().toString());
+		resp.put("date", new Date(tip.getTimeMilli().getAsLong()).toString());
 		
 		ret.put("response", resp);
 		

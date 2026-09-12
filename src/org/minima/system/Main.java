@@ -1207,15 +1207,15 @@ public class Main extends MessageProcessor {
 			}
 			
 			//Has it changed
-			if(tip.getTxPoW().getTxPoWIDData().isEqual(mOldTip)) {
-				MinimaLogger.log("Warning : Chain tip hasn't changed in 180 seconds "+tip.getTxPoW().getTxPoWID()+" "+tip.getTxPoW().getBlockNumber().toString());
+			if(tip.getTxPoWIDData().isEqual(mOldTip)) {
+				MinimaLogger.log("Warning : Chain tip hasn't changed in 180 seconds "+tip.getTxPoWID()+" "+tip.getBlockNumber().toString());
 			}
 			
 			//Keep for the next round
-			mOldTip = tip.getTxPoW().getTxPoWIDData();
+			mOldTip = tip.getTxPoWIDData();
 			
 			//A Ping Message.. The top TxPoWID
-			NIOManager.sendNetworkMessageAll(NIOMessage.MSG_PING, tip.getTxPoW().getTxPoWIDData());
+			NIOManager.sendNetworkMessageAll(NIOMessage.MSG_PING, tip.getTxPoWIDData());
 		
 		}else if(zMessage.getMessageType().equals(MAIN_P2PNETMDS_CHECKER)) {
 			
@@ -1237,7 +1237,7 @@ public class Main extends MessageProcessor {
 					return;
 				}
 				
-				long tiptime 		= tip.getTxPoW().getTimeMilli().getAsLong();
+				long tiptime 		= tip.getTimeMilli().getAsLong();
 				
 				//Difference..
 				long diff 			= timenow - tiptime;

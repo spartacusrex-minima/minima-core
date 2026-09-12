@@ -195,7 +195,7 @@ public class TxPowTree implements Streamable {
 		TxPoWTreeNode current = getTip();
 		int counter = 0;
 		while(current!=null && counter<512) {
-			blocklist.add(current.getTxPowIDData());
+			blocklist.add(current.getTxPoWIDData());
 			current = current.getParent();
 			counter++;
 		}
@@ -273,7 +273,7 @@ public class TxPowTree implements Streamable {
 			}
 		}
 		
-		MiniNumber rootblock = tip.getTxPoW().getBlockNumber();
+		MiniNumber rootblock = tip.getBlockNumber();
 		
 		//First set all the weights to their base weight
 		TxPoWTreeNodeAction printer = new TxPoWTreeNodeAction() {

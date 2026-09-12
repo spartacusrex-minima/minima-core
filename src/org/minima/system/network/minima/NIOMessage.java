@@ -539,7 +539,7 @@ public class NIOMessage implements Runnable {
 				MiniNumber block 		= txpow.getBlockNumber();
 				
 				//Check if is a block and within range of our current tip
-				BigDecimal tipdec 		= new BigDecimal(tip.getTxPoW().getBlockDifficulty().getDataValue());
+				BigDecimal tipdec 		= new BigDecimal(tip.getBlockDifficulty().getDataValue());
 				BigDecimal blockdec 	= new BigDecimal(txpow.getBlockDifficulty().getDataValue());
 				double blockdiffratio 	= tipdec.divide(blockdec, MathContext.DECIMAL32).doubleValue();
 				
@@ -984,11 +984,11 @@ public class NIOMessage implements Runnable {
 				
 				if(tip != null) {
 					pinggreet.getExtraData().put("topblock", tip.getBlockNumber().toString());
-					pinggreet.getExtraData().put("tophash", tip.getTxPoW().getTxPoWID());
+					pinggreet.getExtraData().put("tophash", tip.getTxPoWID());
 					
 					TxPoWTreeNode tip50 = tip.getParent(100);
 					pinggreet.getExtraData().put("50block", tip50.getBlockNumber().toString());
-					pinggreet.getExtraData().put("50hash", tip50.getTxPoW().getTxPoWID());
+					pinggreet.getExtraData().put("50hash", tip50.getTxPoWID());
 				}else {
 					pinggreet.getExtraData().put("topblock", "0");
 					pinggreet.getExtraData().put("tophash", "0x00");

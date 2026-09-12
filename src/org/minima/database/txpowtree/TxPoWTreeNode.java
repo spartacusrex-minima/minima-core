@@ -484,7 +484,7 @@ public class TxPoWTreeNode implements Streamable {
 		return mTxBlockTxPowID;
 	}
 	
-	public MiniData getTxPowIDData() {
+	public MiniData getTxPoWIDData() {
 		return mTxPowIDData;
 	}
 	

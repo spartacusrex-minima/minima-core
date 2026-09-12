@@ -207,9 +207,9 @@ public class P2PPeersChecker extends MessageProcessor {
                     		if(tip != null) {
                     			
                     			//Are we below..
-                    			if(tip.getTxPoW().getBlockNumber().isLess(new MiniNumber(block))) {
+                    			if(tip.getBlockNumber().isLess(new MiniNumber(block))) {
                     				if(forcelog || GeneralParams.PEERSCHECKER_lOG) {
-                        				MinimaLogger.log("[-] Can't check peer as tip below check block tip:"+tip.getTxPoW().getBlockNumber().toString()+" check:"+block);
+                        				MinimaLogger.log("[-] Can't check peer as tip below check block tip:"+tip.getBlockNumber().toString()+" check:"+block);
                         			}	
                     			}else {
                     			
