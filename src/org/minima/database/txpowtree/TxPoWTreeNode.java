@@ -40,7 +40,8 @@ public class TxPoWTreeNode implements Streamable {
 	/**
 	 * The SyncBlock that represents this Node
 	 */
-	TxBlock mTxBlock;
+	String mTxBlockTxPowID;
+	//TxBlock mTxBlock;
 	
 	/**
 	 * Parent of this node
@@ -75,7 +76,7 @@ public class TxPoWTreeNode implements Streamable {
 	/**
 	 * Computed from previous data
 	 */
-	ArrayList<Coin> 	mComputedRelevantCoins = new ArrayList<>();
+	ArrayList<Coin> mComputedRelevantCoins = new ArrayList<>();
 	
 	/**
 	 * Have we checked we have all the txns in this block
@@ -89,7 +90,15 @@ public class TxPoWTreeNode implements Streamable {
 	}
 	
 	public TxPoWTreeNode(TxBlock zTxBlock, boolean zFindRelevant) {
-		mTxBlock			= zTxBlock;
+		
+		//Make sure is in TxBlockDB
+		MinimaDB.getDB().getTxBlockDB().addTxBlock(zTxBlock);
+		
+		//Store the ID
+		mTxBlockTxPowID 	= zTxBlock.getTxPoW().getTxPoWID();
+		//mTxBlock			= zTxBlock;
+				
+		//Store the details..
 		mChildren 	 		= new ArrayList<>();
 		mTotalWeight 		= BigDecimal.ZERO;
 		mParent				= null;
@@ -99,22 +108,25 @@ public class TxPoWTreeNode implements Streamable {
 		constructMMR(zFindRelevant);
 	}
 	
-	//Used in tests..
-	public TxPoWTreeNode(TxPoW zTestTxPoW) {
-		mTxBlock		= new TxBlock(zTestTxPoW);
-		mChildren 	 	= new ArrayList<>();
-		mTotalWeight 	= BigDecimal.ZERO;
-		mParent			= null;
-		mMMR			= new MMR();
-	}
+//	//Used in tests..
+//	public TxPoWTreeNode(TxPoW zTestTxPoW) {
+//		mTxBlock		= new TxBlock(zTestTxPoW);
+//		mChildren 	 	= new ArrayList<>();
+//		mTotalWeight 	= BigDecimal.ZERO;
+//		mParent			= null;
+//		mMMR			= new MMR();
+//	}
 	
 	/**
 	 * Convert the TxBlock 
 	 */
 	private void constructMMR(boolean zFindRelevant) {
 		
+		//Get the TxBlock
+		TxBlock tTxBlock = getTxBlock();
+		
 		//What Block Time Are we..
-		MiniNumber block = mTxBlock.getTxPoW().getBlockNumber();
+		MiniNumber block = tTxBlock.getTxPoW().getBlockNumber();
 				
 		//Create a new MMR
 		mMMR = new MMR();
@@ -127,7 +139,7 @@ public class TxPoWTreeNode implements Streamable {
 		}
 		
 		//Add all the peaks..
-		ArrayList<MMREntry> peaks = mTxBlock.getPreviousPeaks();
+		ArrayList<MMREntry> peaks = tTxBlock.getPreviousPeaks();
 		for(MMREntry peak : peaks) {
 			mMMR.setEntry(peak.getRow(), peak.getEntryNumber(), peak.getMMRData());
 		}
@@ -139,7 +151,7 @@ public class TxPoWTreeNode implements Streamable {
 		boolean balancechange = false;
 		
 		//Now you have all the previous peaks.. update the spent coins..
-		ArrayList<CoinProof> spentcoins = mTxBlock.getInputCoinProofs();
+		ArrayList<CoinProof> spentcoins = tTxBlock.getInputCoinProofs();
 		for(CoinProof input : spentcoins) {
 			
 			//Which entry is this in the MMR
@@ -173,7 +185,7 @@ public class TxPoWTreeNode implements Streamable {
 					//Send a message
 					JSONObject data = new JSONObject();
 					data.put("relevant", true);
-					data.put("txblockid", mTxBlock.getTxPoW().getTxPoWID());
+					data.put("txblockid", tTxBlock.getTxPoW().getTxPoWID());
 					data.put("txblock", block.toString());
 					data.put("spent", true);
 					data.put("coin", coinjson);
@@ -196,7 +208,7 @@ public class TxPoWTreeNode implements Streamable {
 					//Send a message
 					JSONObject data = new JSONObject();
 					data.put("address", coinaddress);
-					data.put("txblockid", mTxBlock.getTxPoW().getTxPoWID());
+					data.put("txblockid", tTxBlock.getTxPoW().getTxPoWID());
 					data.put("txblock", block.toString());
 					data.put("spent", true);
 					data.put("coin", coinjson);
@@ -208,7 +220,7 @@ public class TxPoWTreeNode implements Streamable {
 		}
 		
 		//And ADD all the newly created coins
-		ArrayList<Coin> outputs = mTxBlock.getOutputCoins();
+		ArrayList<Coin> outputs = tTxBlock.getOutputCoins();
 		for(Coin output : outputs) {
 			
 			//Where are we in the MMR
@@ -243,7 +255,7 @@ public class TxPoWTreeNode implements Streamable {
 					//Did we remove the state..
 					if(!newcoin.storeState()) {
 						//Get it..
-						ArrayList<StateVariable> removedstate = mTxBlock.removedState(newcoin.getCoinID().to0xString());
+						ArrayList<StateVariable> removedstate = tTxBlock.removedState(newcoin.getCoinID().to0xString());
 						if(removedstate != null) {
 							//Add it to the JSON
 							coinjson.put("state", Coin.convertStateListToJSON(removedstate));
@@ -255,7 +267,7 @@ public class TxPoWTreeNode implements Streamable {
 					//Send a message
 					JSONObject data = new JSONObject();
 					data.put("relevant", true);
-					data.put("txblockid", mTxBlock.getTxPoW().getTxPoWID());
+					data.put("txblockid", tTxBlock.getTxPoW().getTxPoWID());
 					data.put("txblock", block.toString());
 					data.put("spent", false);
 					data.put("coin", coinjson);
@@ -276,7 +288,7 @@ public class TxPoWTreeNode implements Streamable {
 					//Did we remove the state..
 					if(!newcoin.storeState()) {
 						//Get it..
-						ArrayList<StateVariable> removedstate = mTxBlock.removedState(newcoin.getCoinID().to0xString());
+						ArrayList<StateVariable> removedstate = tTxBlock.removedState(newcoin.getCoinID().to0xString());
 						if(removedstate != null) {
 							//Add it to the JSON
 							coinjson.put("state", Coin.convertStateListToJSON(removedstate));
@@ -288,7 +300,7 @@ public class TxPoWTreeNode implements Streamable {
 					//Send a message
 					JSONObject data = new JSONObject();
 					data.put("address", coinaddress);
-					data.put("txblockid", mTxBlock.getTxPoW().getTxPoWID());
+					data.put("txblockid", tTxBlock.getTxPoW().getTxPoWID());
 					data.put("txblock", block.toString());
 					data.put("spent", false);
 					data.put("coin", coinjson);
@@ -442,7 +454,7 @@ public class TxPoWTreeNode implements Streamable {
 	}
 	
 	public TxBlock getTxBlock() {
-		return mTxBlock;
+		return MinimaDB.getDB().getTxBlockDB().findTxBlock(mTxBlockTxPowID);
 	}
 	
 	public TxPoW getTxPoW() {
@@ -617,7 +629,7 @@ public class TxPoWTreeNode implements Streamable {
 	
 	@Override
 	public void writeDataStream(DataOutputStream zOut) throws IOException {
-		mTxBlock.writeDataStream(zOut);
+		getTxBlock().writeDataStream(zOut);
 		mMMR.writeDataStream(zOut);
 		
 		//Get all the coins..
@@ -643,11 +655,19 @@ public class TxPoWTreeNode implements Streamable {
 		mParent				= null;
 		mRelevantMMRCoins 	= new ArrayList<>();
 		
-		mTxBlock			= TxBlock.ReadFromStream(zIn);
+		//Read in the TxBlock
+		//mTxBlock			= TxBlock.ReadFromStream(zIn);
+		TxBlock tTxBlock	= TxBlock.ReadFromStream(zIn);
+		MinimaDB.getDB().getTxBlockDB().addTxBlock(tTxBlock);
+		
+		//Store th TxPoWID
+		mTxBlockTxPowID		= tTxBlock.getTxPoW().getTxPoWID();
+		
+		//Load the MMR
 		mMMR				= MMR.ReadFromStream(zIn);
 		
 		CoinDB coindb 		= CoinDB.getTxPoWTreeCoinDB();
-		MiniNumber block 	= mTxBlock.getTxPoW().getBlockNumber();
+		MiniNumber block 	= tTxBlock.getTxPoW().getBlockNumber();
 		
 		int len = MiniNumber.ReadFromStream(zIn).getAsInt();
 		for(int i=0;i<len;i++) {
