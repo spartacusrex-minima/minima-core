@@ -103,7 +103,7 @@ public class CoinDB extends SqlDB {
 	public synchronized boolean insertCoin(MiniData zTxPoWTreeID, Coin zCoin, MiniNumber zBlock) {
 		try {
 			
-			MinimaLogger.log("SQLDBCOIN - insertCoin : "+zCoin.toJSON());
+			MinimaLogger.log("SQLDBCOIN - insertCoin block:"+zBlock+" coin:"+zCoin.toJSON());
 			
 			//Make sure..
 			if(checkOpen()) {
@@ -284,20 +284,16 @@ public class CoinDB extends SqlDB {
 		
 		for(Coin cc : zNoStateCoins) {
 			
-			//Are they stateless minima..
-			if(cc.mSQLDBCoinHasState) {
-				
-				//Get the original FULL STATE..
-				Coin fullcoin = getCoin(cc.getCoinID());
+			//Get the FULL Coin Details
+			Coin fullcoin = getCoin(cc.getCoinID());
 			
-				//Add to our list
-				fullcoins.add(fullcoin);
-				
-			}else {
-				
-				//A normal coin.. just add..
-				fullcoins.add(cc);
-			}
+			//Make a copy - with correct state and token
+			Coin newcoin = cc.deepCopy();
+			newcoin.setState(fullcoin.getState());
+			newcoin.setToken(fullcoin.getToken());
+			
+			//A normal coin.. just add..
+			fullcoins.add(newcoin);
 		}
 		
 		return fullcoins;

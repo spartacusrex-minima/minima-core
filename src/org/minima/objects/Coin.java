@@ -89,11 +89,6 @@ public class Coin implements Streamable {
 	Token mToken = null;
 	
 	/**
-	 * TEMP var for SQLDBCoin to show if this coin had state..
-	 */
-	public boolean mSQLDBCoinHasState = true;
-	
-	/**
 	 * Main Constructor
 	 */
 	public Coin(MiniData zAddress, MiniNumber zAmount, MiniData zTokenID) {
@@ -343,9 +338,6 @@ public class Coin implements Streamable {
 			
 			dis.close();
 			baos.close();
-			
-			//SQLDBCoin has state var
-			deepcopy.mSQLDBCoinHasState = mSQLDBCoinHasState;
 			
 			return deepcopy;
 			

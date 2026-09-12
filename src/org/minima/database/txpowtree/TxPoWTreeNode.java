@@ -392,16 +392,12 @@ public class TxPoWTreeNode implements Streamable {
 		//Does this coin have state or token details
 		boolean hasstate = (zCoin.getState().size()>0) || !zCoin.getTokenID().equals(Token.TOKENID_MINIMA);
 		if(hasstate) {
+			//This TxPoWNode has some some statefull coins.. 
 			mTxPoWTreeHasState = true;
 		}
 		
-		//Set the Coin TEMP var
-		zCoin.mSQLDBCoinHasState = hasstate;
-		
 		//Store the Complete Coin in SQL
-		if(hasstate) {
-			CoinDB.getTxPoWTreeCoinDB().insertCoin(mTxPoWTreeID, zCoin, zBlocknumber);
-		}
+		CoinDB.getTxPoWTreeCoinDB().insertCoin(mTxPoWTreeID, zCoin, zBlocknumber);
 		
 		//Store a trimmed down version in RAM (only minima & no state)
 		Coin trimcoin = zCoin.deepCopy();
@@ -434,7 +430,7 @@ public class TxPoWTreeNode implements Streamable {
 			MinimaLogger.log("Get ALL coins FULL State use SQLDB.. block:"+getBlockNumber());
 		
 			//Return the complete set..
-			return CoinDB.getTxPoWTreeCoinDB().convertNoStateCoins(mCoins);
+			return CoinDB.getTxPoWTreeCoinDB().getAllCoins(mTxPoWTreeID);
 			
 		}else {
 			return mCoins;
