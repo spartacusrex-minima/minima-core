@@ -247,21 +247,6 @@ public class ArchiveManager extends SqlDB {
 	
 	public synchronized boolean saveBlock(TxBlock zBlock) throws SQLException {
 		
-		//Try Twice.. incase db shuts during..
-		try {
-			_intSaveBlock(zBlock);
-			
-		}catch(Exception exc) {
-			
-			//Try again..
-			_intSaveBlock(zBlock);
-		}
-		
-		return true;
-	}
-	
-	private synchronized boolean _intSaveBlock(TxBlock zBlock) throws SQLException {
-		
 		//Make sure..
 		checkOpen();
 	

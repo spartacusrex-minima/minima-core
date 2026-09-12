@@ -437,7 +437,7 @@ public class TxPoWProcessor extends MessageProcessor {
 					}else {
 						
 						//Do we have the Parent TxPoW
-						TxBlock parent = MinimaDB.getDB().getTxBlockDB().findTxBlock(txpow.getParentID().to0xString());
+						TxBlock parent = MinimaDB.getDB().getTxBlockDB().getTxBlock(txpow.getParentID().to0xString());
 						if(parent != null) {
 							//If Parent not added.. must be missing transactions.. try now ( This block builds on it soo.. )
 							processstack.push(parent);
@@ -579,15 +579,18 @@ public class TxPoWProcessor extends MessageProcessor {
 						txpdb.setInCascade(txpid);
 					}
 					
+					//Get the Block
+					TxBlock tTxBlock = txpnode.getTxBlock();
+					
 					//Store in the ArchiveManager
-					arch.saveBlock(txpnode.getTxBlock());
+					arch.saveBlock(tTxBlock);
 					
 					//And add to the cascade
 					cascdb.addToTip(txpnode.getTxPoW());
 					
 					//Send out Notify Messages for coins added
 					try {
-						TxPoWTreeNode.CheckTxBlockForNotifyCoins(txpnode.getTxBlock());
+						TxPoWTreeNode.CheckTxBlockForNotifyCoins(tTxBlock);
 					}catch(Exception exc) {
 						MinimaLogger.log(exc);
 					}
@@ -596,7 +599,7 @@ public class TxPoWProcessor extends MessageProcessor {
 					if(GeneralParams.IS_MEGAMMR) {
 						//MinimaLogger.log("MEGAMMR : Add block "+txpnode.getTxBlock().getTxPoW().getBlockNumber());
 						//Add this to the MEGA MMR
-						megammr.addBlock(txpnode.getTxBlock());
+						megammr.addBlock(tTxBlock);
 					}
 				}
 				

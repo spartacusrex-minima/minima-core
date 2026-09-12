@@ -371,7 +371,7 @@ public class TxPoWGenerator {
 		//If the start and end are the same..
 		if(startblock.getBlockNumber().isEqual(endblock.getBlockNumber())) {
 			//Must be the root of the tree.. Return the LATEST value..
-			return zParent.getTxBlock().getTxPoW().getBlockDifficulty();
+			return zParent.getBlockDifficulty();
 		}
 		
 		//In case of serious time error
@@ -384,7 +384,7 @@ public class TxPoWGenerator {
 			MinimaLogger.log("Root node : "+MinimaDB.getDB().getTxPoWTree().getRoot().getBlockNumber());
 			
 			//Return the LATEST value..
-			return zParent.getTxBlock().getTxPoW().getBlockDifficulty();
+			return zParent.getBlockDifficulty();
 		}
 		
 		//Get current speed

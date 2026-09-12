@@ -40,8 +40,9 @@ public class TxPoWTreeNode implements Streamable {
 	/**
 	 * The SyncBlock that represents this Node
 	 */
-	String mTxBlockTxPowID;
-	//TxBlock mTxBlock;
+	String 		mTxBlockTxPowID;
+	MiniNumber 	mBlockNumber;
+	MiniData 	mBlockDifficulty;
 	
 	/**
 	 * Parent of this node
@@ -96,7 +97,8 @@ public class TxPoWTreeNode implements Streamable {
 		
 		//Store the ID
 		mTxBlockTxPowID 	= zTxBlock.getTxPoW().getTxPoWID();
-		//mTxBlock			= zTxBlock;
+		mBlockNumber		= zTxBlock.getTxPoW().getBlockNumber();
+		mBlockDifficulty	= zTxBlock.getTxPoW().getBlockDifficulty();
 				
 		//Store the details..
 		mChildren 	 		= new ArrayList<>();
@@ -454,15 +456,23 @@ public class TxPoWTreeNode implements Streamable {
 	}
 	
 	public TxBlock getTxBlock() {
-		return MinimaDB.getDB().getTxBlockDB().findTxBlock(mTxBlockTxPowID);
+		return MinimaDB.getDB().getTxBlockDB().getTxBlock(mTxBlockTxPowID);
+	}
+	
+	public String getTxPowID() {
+		return mTxBlockTxPowID;
+	}
+	
+	public MiniNumber getBlockNumber() {
+		return mBlockNumber;
+	}
+
+	public MiniData getBlockDifficulty() {
+		return mBlockDifficulty;
 	}
 	
 	public TxPoW getTxPoW() {
 		return getTxBlock().getTxPoW();
-	}
-	
-	public MiniNumber getBlockNumber() {
-		return getTxPoW().getBlockNumber();
 	}
 	
 	public MMR getMMR() {
@@ -656,12 +666,13 @@ public class TxPoWTreeNode implements Streamable {
 		mRelevantMMRCoins 	= new ArrayList<>();
 		
 		//Read in the TxBlock
-		//mTxBlock			= TxBlock.ReadFromStream(zIn);
 		TxBlock tTxBlock	= TxBlock.ReadFromStream(zIn);
 		MinimaDB.getDB().getTxBlockDB().addTxBlock(tTxBlock);
 		
-		//Store th TxPoWID
+		//Store the TxPoWID
 		mTxBlockTxPowID		= tTxBlock.getTxPoW().getTxPoWID();
+		mBlockNumber	 	= tTxBlock.getTxPoW().getBlockNumber();
+		mBlockDifficulty	= tTxBlock.getTxPoW().getBlockDifficulty();
 		
 		//Load the MMR
 		mMMR				= MMR.ReadFromStream(zIn);

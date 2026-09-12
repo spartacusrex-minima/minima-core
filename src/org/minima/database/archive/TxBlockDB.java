@@ -19,7 +19,7 @@ public class TxBlockDB {
 		mTxBlockDB.put(zTxBlock.getTxPoW().getTxPoWID(), zTxBlock);
 	}
 	
-	public synchronized TxBlock findTxBlock(String zTxPowID) {
+	public synchronized TxBlock getTxBlock(String zTxPowID) {
 		return mTxBlockDB.get(zTxPowID);
 	}
 	
@@ -42,9 +42,9 @@ public class TxBlockDB {
 		return ret;
 	}
 	
-	public synchronized void clearAll() {
-		mTxBlockDB.clear();
-	}
+//	public synchronized void clearAll() {
+//		mTxBlockDB.clear();
+//	}
 	
 	public synchronized void clearOld(MiniNumber zMinBlock) {
 	

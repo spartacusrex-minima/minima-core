@@ -1146,7 +1146,7 @@ public class NIOMessage implements Runnable {
 				String txid 	 = txpowid.to0xString();
 				
 				//Do we have it..
-				TxBlock txb = MinimaDB.getDB().getTxBlockDB().findTxBlock(txid);
+				TxBlock txb = MinimaDB.getDB().getTxBlockDB().getTxBlock(txid);
 				
 				//Do we have it in TxPoWTree
 				if(txb == null) {
@@ -1169,7 +1169,7 @@ public class NIOMessage implements Runnable {
 				String txid 		= txpowid.to0xString();
 				
 				//Do we have it.. in RAM DB
-				TxBlock txb = MinimaDB.getDB().getTxBlockDB().findTxBlock(txid);
+				TxBlock txb = MinimaDB.getDB().getTxBlockDB().getTxBlock(txid);
 				
 				//Do we have it in TxPoWTree
 				if(txb == null) {
@@ -1213,7 +1213,7 @@ public class NIOMessage implements Runnable {
 					String txid 	= parent.to0xString();
 				
 					//Do we have it.. in RAM DB
-					TxBlock txb = MinimaDB.getDB().getTxBlockDB().findTxBlock(txid);
+					TxBlock txb = MinimaDB.getDB().getTxBlockDB().getTxBlock(txid);
 					
 					//Do we have it in TxPoWTree
 					if(txb == null) {
