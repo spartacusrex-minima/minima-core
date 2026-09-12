@@ -70,14 +70,17 @@ public class TxPoWGenerator {
 		//Current top block
 		TxPoWTreeNode tip = MinimaDB.getDB().getTxPoWTree().getTip();
 		
+		//The Tip TxPow
+		TxPoW tiptxpow = tip.getTxPoW();
+		
 		//Set the block number
-		txpow.setBlockNumber(tip.getTxPoW().getBlockNumber().increment());
+		txpow.setBlockNumber(tip.getBlockNumber().increment());
 		
 		//What is the millitime..
 		MiniNumber millitime = new MiniNumber(System.currentTimeMillis());
 		
 		//Check TimeMilli is acceptable..
-		MiniNumber mintime 	= getMedianTimeBlock(tip, GlobalParams.MEDIAN_BLOCK_CALC*2).getTxPoW().getTimeMilli();
+		MiniNumber mintime 	= getMedianTimeBlock(tip, GlobalParams.MEDIAN_BLOCK_CALC*2).getTimeMilli();
 		MiniNumber maxtime 	= mintime.add(TxPoWChecker.MAX_TIME_FUTURE); 
 		if(millitime.isLess(mintime)) {
 			//MinimaLogger.log("NEW TxPoW time too far back.. setting minimum");
@@ -103,7 +106,7 @@ public class TxPoWGenerator {
 		//Set the correct Magic Numbers..
 		UserDB udb = MinimaDB.getDB().getUserDB();
 		
-		Magic txpowmagic = tip.getTxPoW().getMagic().calculateNewCurrent();
+		Magic txpowmagic = tiptxpow.getMagic().calculateNewCurrent();
 		txpowmagic.setDesiredKISSVM(udb.getMagicDesiredKISSVM());
 		txpowmagic.setDesiredMaxTxPoWSize(udb.getMagicMaxTxPoWSize());
 		txpowmagic.setDesiredMaxTxns(udb.getMagicMaxTxns());
@@ -111,14 +114,14 @@ public class TxPoWGenerator {
 		
 		//Set the parents..
 		for(int i=0;i<GlobalParams.MINIMA_CASCADE_LEVELS;i++) {
-			txpow.setSuperParent(i, tip.getTxPoW().getSuperParent(i));
+			txpow.setSuperParent(i, tiptxpow.getSuperParent(i));
 		}
 
 		//And now set the correct SBL given the last block
-		int sbl = tip.getTxPoW().getSuperLevel();
+		int sbl = tiptxpow.getSuperLevel();
 				
 		//All levels below this now point to the last block..
-		MiniData tiptxid = tip.getTxPoW().getTxPoWIDData();
+		MiniData tiptxid = tiptxpow.getTxPoWIDData();
 		for(int i=sbl;i>=0;i--) {
 			txpow.setSuperParent(i, tiptxid);
 		}
@@ -375,12 +378,12 @@ public class TxPoWGenerator {
 		}
 		
 		//In case of serious time error
-		MiniNumber timediff = startblock.getTxPoW().getTimeMilli().sub(endblock.getTxPoW().getTimeMilli());
+		MiniNumber timediff = startblock.getTimeMilli().sub(endblock.getTimeMilli());
 		if(timediff.isLessEqual(MiniNumber.ZERO)) {
 			//This should not happen..
 			MinimaLogger.log("SERIOUS NEGATIVE TIME ERROR @ "+zParent.getBlockNumber()+" Using latest block diff..");
-			MinimaLogger.log("StartBlock @ "+origstart+"/"+startblock.getBlockNumber()+" "+new Date(startblock.getTxPoW().getTimeMilli().getAsLong()));
-			MinimaLogger.log("EndBlock   @ "+origend+"/"+endblock.getBlockNumber()+" "+new Date(endblock.getTxPoW().getTimeMilli().getAsLong()));
+			MinimaLogger.log("StartBlock @ "+origstart+"/"+startblock.getBlockNumber()+" "+new Date(startblock.getTimeMilli().getAsLong()));
+			MinimaLogger.log("EndBlock   @ "+origend+"/"+endblock.getBlockNumber()+" "+new Date(endblock.getTimeMilli().getAsLong()));
 			MinimaLogger.log("Root node : "+MinimaDB.getDB().getTxPoWTree().getRoot().getBlockNumber());
 			
 			//Return the LATEST value..
@@ -421,11 +424,11 @@ public class TxPoWGenerator {
 		//Get the past block
 		TxPoWTreeNode pastblock = zStartBlock.getParent(zBlocksBack.getAsInt());
 		
-		MiniNumber blockpast	= pastblock.getTxPoW().getBlockNumber();
-		MiniNumber timepast 	= pastblock.getTxPoW().getTimeMilli();
+		MiniNumber blockpast	= pastblock.getBlockNumber();
+		MiniNumber timepast 	= pastblock.getTimeMilli();
 		
-		MiniNumber blocknow		= zStartBlock.getTxPoW().getBlockNumber();
-		MiniNumber timenow 		= zStartBlock.getTxPoW().getTimeMilli();
+		MiniNumber blocknow		= zStartBlock.getBlockNumber();
+		MiniNumber timenow 		= zStartBlock.getTimeMilli();
 		
 		MiniNumber blockdiff 	= blocknow.sub(blockpast);
 		MiniNumber timediff 	= timenow.sub(timepast);
@@ -443,7 +446,7 @@ public class TxPoWGenerator {
 		TxPoWTreeNode current 	= zTopBlock;
 		int counter 			= 0;
 		while(counter<totalblock) {
-			MiniData difficulty = current.getTxPoW().getBlockDifficulty();
+			MiniData difficulty = current.getBlockDifficulty();
 			BigInteger diffval 	= difficulty.getDataValue();
 			
 			//Add to the total..
@@ -490,7 +493,7 @@ public class TxPoWGenerator {
 		Collections.sort(allblocks, new Comparator<TxPoWTreeNode>() {
 			@Override
 			public int compare(TxPoWTreeNode o1, TxPoWTreeNode o2) {
-				return o1.getTxPoW().getTimeMilli().compareTo(o2.getTxPoW().getTimeMilli());
+				return o1.getTimeMilli().compareTo(o2.getTimeMilli());
 			}
 		});
 		

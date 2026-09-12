@@ -217,7 +217,7 @@ public class P2PPeersChecker extends MessageProcessor {
 	                    			TxPoWTreeNode checknode = tip.getPastNode(new MiniNumber(block));
 	                    			if(checknode != null) {
 	                    			
-	    	                			if(!checknode.getTxPowID().equals(blockhash)) {
+	    	                			if(!checknode.getTxPoWID().equals(blockhash)) {
 	    	                			
 	    	                				if(forcelog || GeneralParams.PEERSCHECKER_lOG) {
 	    	                					MinimaLogger.log("PEERS CHECKER incorrect chain! @ "+block+" "+address.toString()+" ");

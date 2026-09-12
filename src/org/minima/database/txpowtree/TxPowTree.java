@@ -102,7 +102,7 @@ public class TxPowTree implements Streamable {
 	}
 
 	public void addFastLink(TxPoWTreeNode zNode) {
-		mFastLink.put(zNode.getTxPoW().getTxPoWID(), zNode);
+		mFastLink.put(zNode.getTxPoWID(), zNode);
 	}
 	
 	public void recalculateTree() {
@@ -117,7 +117,7 @@ public class TxPowTree implements Streamable {
 			@Override
 			public void runAction(TxPoWTreeNode zNode) {
 				//Get the TxPoW weight
-				BigDecimal weight = zNode.getTxPoW().getWeight();
+				BigDecimal weight = zNode.getWeight();
 				
 				//This is the base weight
 				zNode.setTotalWeight(weight);
@@ -126,7 +126,7 @@ public class TxPowTree implements Streamable {
 				allnodes.add(zNode);
 				
 				//And add to our fast link table..
-				mFastLink.put(zNode.getTxPoW().getTxPoWID(), zNode);
+				mFastLink.put(zNode.getTxPoWID(), zNode);
 			}
 		}; 
 		
@@ -140,7 +140,7 @@ public class TxPowTree implements Streamable {
 		allnodes.sort(new Comparator<TxPoWTreeNode>() {
 			@Override
 			public int compare(TxPoWTreeNode o1, TxPoWTreeNode o2) {
-				return o2.getTxPoW().getBlockNumber().compareTo(o1.getTxPoW().getBlockNumber());
+				return o2.getBlockNumber().compareTo(o1.getBlockNumber());
 			}
 		});
 		
@@ -195,7 +195,7 @@ public class TxPowTree implements Streamable {
 		TxPoWTreeNode current = getTip();
 		int counter = 0;
 		while(current!=null && counter<512) {
-			blocklist.add(current.getTxPoW().getTxPoWIDData());
+			blocklist.add(current.getTxPowIDData());
 			current = current.getParent();
 			counter++;
 		}

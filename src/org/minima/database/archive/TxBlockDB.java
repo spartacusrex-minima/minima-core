@@ -101,7 +101,19 @@ public class TxBlockDB extends SqlDB {
 			}
 		}
 		
-		MinimaLogger.log("TxBlockDB GetBlock "+zTxPoWID);
+		//Check last added
+		if(mLastAddBlock != null) {
+			if(mLastAddBlock.getTxPoW().getTxPoWID().equals(zTxPoWID)) {
+				//Allready added!
+				return mLastAddBlock;
+			}
+		}
+		
+		try{
+			throw new Exception("STACK");
+		}catch (Exception e) {
+			e.printStackTrace();
+		}
 		
 		try {
 			
@@ -129,6 +141,8 @@ public class TxBlockDB extends SqlDB {
 				
 				//SAVE IT
 				mLastGetBlock = sb;
+		
+				MinimaLogger.log("TxBlockDB GetBlock "+zTxPoWID+" "+mLastGetBlock.getTxPoW().getBlockNumber());
 				
 				return sb;
 			}

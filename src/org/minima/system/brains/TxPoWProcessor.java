@@ -628,14 +628,11 @@ public class TxPoWProcessor extends MessageProcessor {
 			TxPoWTreeNode tip = txptree.getTip();
 			while(tip != null) {
 				
-				//Get the TxPoW
-				TxPoW txpow = tip.getTxPoW();
-				
 				//Set as onchain..
-				txpdb.setOnMainChain(txpow.getTxPoWID());
+				txpdb.setOnMainChain(tip.getTxPoWID());
 				
 				//Set all the txns in the block
-				ArrayList<String> txns = txpow.getTransactions();
+				ArrayList<String> txns = tip.getTransactions();
 				for(String txn : txns) {
 					txpdb.setOnMainChain(txn);
 				}
@@ -649,7 +646,7 @@ public class TxPoWProcessor extends MessageProcessor {
 			
 			//Has the tip changed..
 			if(currenttip!=null && newtipnode!=null) {
-				if(!currenttip.getTxPoW().getTxPoWIDData().isEqual(newtipnode.getTxPoW().getTxPoWIDData())) {
+				if(!currenttip.getTxPowIDData().isEqual(newtipnode.getTxPowIDData())) {
 					Main.getInstance().PostMessage(new Message(Main.MAIN_NEWBLOCK).addObject("txpow", newtipnode.getTxPoW()));
 				}
 			}

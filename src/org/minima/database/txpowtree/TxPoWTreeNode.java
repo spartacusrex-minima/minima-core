@@ -3,6 +3,7 @@ package org.minima.database.txpowtree;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 
@@ -41,8 +42,13 @@ public class TxPoWTreeNode implements Streamable {
 	 * The SyncBlock that represents this Node
 	 */
 	String 		mTxBlockTxPowID;
+	MiniData	mTxPowIDData;
 	MiniNumber 	mBlockNumber;
 	MiniData 	mBlockDifficulty;
+	BigDecimal	mWeight;
+	MiniNumber	mTimeMilli;
+	int 		mSuperLevel;
+	ArrayList<String> mTransactionIDs = new ArrayList<>();
 	
 	/**
 	 * Parent of this node
@@ -97,10 +103,8 @@ public class TxPoWTreeNode implements Streamable {
 			MinimaDB.getDB().getTxBlockDB().addTxBlock(zTxBlock);
 		}
 		
-		//Store the ID
-		mTxBlockTxPowID 	= zTxBlock.getTxPoW().getTxPoWID();
-		mBlockNumber		= zTxBlock.getTxPoW().getBlockNumber();
-		mBlockDifficulty	= zTxBlock.getTxPoW().getBlockDifficulty();
+		//Store the details
+		setTxBlockDetails(zTxBlock);
 				
 		//Store the details..
 		mChildren 	 		= new ArrayList<>();
@@ -110,6 +114,21 @@ public class TxPoWTreeNode implements Streamable {
 		
 		//Construct the MMR..
 		constructMMR(zFindRelevant, zTxBlock);
+	}
+	
+	private void setTxBlockDetails(TxBlock zTxBlock) {
+		
+		TxPoW txpow = zTxBlock.getTxPoW();
+		
+		//Store the ID
+		mTxBlockTxPowID 	= txpow.getTxPoWID();
+		mTxPowIDData		= new MiniData(mTxBlockTxPowID);
+		mBlockNumber		= txpow.getBlockNumber();
+		mBlockDifficulty	= txpow.getBlockDifficulty();
+		mWeight				= txpow.getWeight();
+		mTimeMilli			= txpow.getTimeMilli();
+		mSuperLevel			= txpow.getSuperLevel();
+		mTransactionIDs		= txpow.getTransactions();
 	}
 	
 //	//Used in tests..
@@ -461,8 +480,12 @@ public class TxPoWTreeNode implements Streamable {
 		return MinimaDB.getDB().getTxBlockDB().getTxBlock(mTxBlockTxPowID);
 	}
 	
-	public String getTxPowID() {
+	public String getTxPoWID() {
 		return mTxBlockTxPowID;
+	}
+	
+	public MiniData getTxPowIDData() {
+		return mTxPowIDData;
 	}
 	
 	public MiniNumber getBlockNumber() {
@@ -471,6 +494,22 @@ public class TxPoWTreeNode implements Streamable {
 
 	public MiniData getBlockDifficulty() {
 		return mBlockDifficulty;
+	}
+	
+	public BigDecimal getWeight() {
+		return mWeight;
+	}
+	
+	public MiniNumber getTimeMilli() {
+		return mTimeMilli;
+	}
+
+	public int getSuperLevel() {
+		return mSuperLevel;
+	}
+	
+	public ArrayList<String> getTransactions(){
+		return mTransactionIDs;
 	}
 	
 	public TxPoW getTxPoW() {
@@ -546,7 +585,7 @@ public class TxPoWTreeNode implements Streamable {
 	public TxPoWTreeNode getPastNode(MiniNumber zBlockNumber) {
 		TxPoWTreeNode parent 	= this;
 		while(parent != null) {
-			if(parent.getTxPoW().getBlockNumber().isEqual(zBlockNumber)) {
+			if(parent.getBlockNumber().isEqual(zBlockNumber)) {
 				return parent;
 			}
 			
@@ -625,9 +664,9 @@ public class TxPoWTreeNode implements Streamable {
 		}
 		
 		//Cycle through all the TxPoW and see if we have them all
-		ArrayList<MiniData> txns = getTxPoW().getBlockTransactions();
-		for(MiniData txn : txns) {
-			boolean exists = zTxpDB.exists(txn.to0xString());
+		ArrayList<String> txns = getTransactions();
+		for(String txn : txns) {
+			boolean exists = zTxpDB.exists(txn);
 			if(!exists) {
 				return false;
 			}
@@ -672,9 +711,7 @@ public class TxPoWTreeNode implements Streamable {
 		MinimaDB.getDB().getTxBlockDB().addTxBlock(tTxBlock);
 		
 		//Store the TxPoWID
-		mTxBlockTxPowID		= tTxBlock.getTxPoW().getTxPoWID();
-		mBlockNumber	 	= tTxBlock.getTxPoW().getBlockNumber();
-		mBlockDifficulty	= tTxBlock.getTxPoW().getBlockDifficulty();
+		setTxBlockDetails(tTxBlock);
 		
 		//Load the MMR
 		mMMR				= MMR.ReadFromStream(zIn);

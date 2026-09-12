@@ -80,8 +80,8 @@ public class TxPoWChecker {
 			
 			//Check TimeMilli is acceptable..
 			TxPoWTreeNode median = TxPoWGenerator.getMedianTimeBlock(zParentNode, GlobalParams.MEDIAN_BLOCK_CALC*2);
-			MiniNumber maxtime 	 = median.getTxPoW().getTimeMilli().add(MAX_TIME_FUTURE); 
-			if(zTxPoW.getTimeMilli().isLess(median.getTxPoW().getTimeMilli())) {
+			MiniNumber maxtime 	 = median.getTimeMilli().add(MAX_TIME_FUTURE); 
+			if(zTxPoW.getTimeMilli().isLess(median.getTimeMilli())) {
 				MinimaLogger.log("Invalid TxPoW TimeMilli less than median 1 hr back "+zTxPoW.getTxPoWID());
 				return false;
 			}else if(zTxPoW.getTimeMilli().isMore(maxtime)) {
@@ -771,9 +771,9 @@ public class TxPoWChecker {
 		while(current != null) {
 			
 			//Get the TxPoW
-			TxPoW txpow 	= current.getTxPoW();
-			MiniData txdata	= txpow.getTxPoWIDData();
-			int superlevel 	= txpow.getSuperLevel();
+//			TxPoW txpow 	= current.getTxPoW();
+			MiniData txdata	= current.getTxPowIDData();
+			int superlevel 	= current.getSuperLevel();
 			
 			//Is it more than or equal to current required..
 			while(superlevel>=blocksup) {
