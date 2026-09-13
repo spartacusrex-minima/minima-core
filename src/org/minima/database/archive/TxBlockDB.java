@@ -17,6 +17,7 @@ public class TxBlockDB extends SqlDB {
 	PreparedStatement SQL_INSERT_SYNCBLOCK 		= null;
 	PreparedStatement SQL_FIND_SYNCBLOCK 		= null;
 	PreparedStatement SQL_FIND_CHILDREN 		= null;
+	PreparedStatement SQL_CLEAR_OLD 			= null;
 	
 	TxBlock mLastGetBlock = null;
 	TxBlock mLastAddBlock = null;
@@ -51,6 +52,7 @@ public class TxBlockDB extends SqlDB {
 		SQL_INSERT_SYNCBLOCK 	= mSQLConnection.prepareStatement(insert);
 		SQL_FIND_SYNCBLOCK 		= mSQLConnection.prepareStatement("SELECT txblock FROM syncblock WHERE txpowid=?");
 		SQL_FIND_CHILDREN 		= mSQLConnection.prepareStatement("SELECT txblock FROM syncblock WHERE parentid=?");
+		SQL_CLEAR_OLD			= mSQLConnection.prepareStatement("DELETE FROM txblock WHERE block<?");
 	}
 	
 	public synchronized void addTxBlock(TxBlock zTxBlock) {
@@ -196,6 +198,21 @@ public class TxBlockDB extends SqlDB {
 	
 	public synchronized void clearOld(MiniNumber zMinBlock) {
 		
+		try {
+			
+			//Make sure..
+			checkOpen();
+		
+			//Set search params
+			SQL_CLEAR_OLD.clearParameters();
+			SQL_CLEAR_OLD.setLong(1, zMinBlock.getAsLong());
+			
+			//Run the query
+			SQL_CLEAR_OLD.executeQuery();
+			
+		} catch (SQLException e) {
+			MinimaLogger.log(e);
+		}
 	}
 	
 }
