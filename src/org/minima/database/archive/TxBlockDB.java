@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import org.minima.objects.TxBlock;
 import org.minima.objects.base.MiniData;
 import org.minima.objects.base.MiniNumber;
+import org.minima.utils.MiniUtil;
 import org.minima.utils.MinimaLogger;
 import org.minima.utils.SqlDB;
 
@@ -52,7 +53,7 @@ public class TxBlockDB extends SqlDB {
 		SQL_INSERT_SYNCBLOCK 	= mSQLConnection.prepareStatement(insert);
 		SQL_FIND_SYNCBLOCK 		= mSQLConnection.prepareStatement("SELECT txblock FROM syncblock WHERE txpowid=?");
 		SQL_FIND_CHILDREN 		= mSQLConnection.prepareStatement("SELECT txblock FROM syncblock WHERE parentid=?");
-		SQL_CLEAR_OLD			= mSQLConnection.prepareStatement("DELETE FROM txblock WHERE block<?");
+		SQL_CLEAR_OLD			= mSQLConnection.prepareStatement("DELETE FROM syncblock WHERE block<?");
 	}
 	
 	public synchronized void addTxBlock(TxBlock zTxBlock) {
@@ -111,11 +112,7 @@ public class TxBlockDB extends SqlDB {
 			}
 		}
 		
-		try{
-			throw new Exception("STACK");
-		}catch (Exception e) {
-			e.printStackTrace();
-		}
+		MiniUtil.PrintStackTrace();
 		
 		try {
 			

@@ -27,4 +27,11 @@ public class MiniUtil {
 		return ret;
 	}
 	
+	public static void PrintStackTrace() {
+		try{
+			throw new Exception("STACK TRACE");
+		}catch (Exception e) {
+			MinimaLogger.log(e);
+		}
+	}
 }
