@@ -49,6 +49,7 @@ public class TxPoWTreeNode implements Streamable {
 	MiniNumber	mTimeMilli;
 	int 		mSuperLevel;
 	ArrayList<String> mTransactionIDs = new ArrayList<>();
+	boolean mIsTransaction;
 	
 	/**
 	 * Parent of this node
@@ -129,6 +130,7 @@ public class TxPoWTreeNode implements Streamable {
 		mTimeMilli			= txpow.getTimeMilli();
 		mSuperLevel			= txpow.getSuperLevel();
 		mTransactionIDs		= txpow.getTransactions();
+		mIsTransaction		= txpow.isTransaction();
 	}
 	
 //	//Used in tests..
@@ -510,6 +512,10 @@ public class TxPoWTreeNode implements Streamable {
 	
 	public ArrayList<String> getTransactions(){
 		return mTransactionIDs;
+	}
+	
+	public boolean isTransaction(){
+		return mIsTransaction;
 	}
 	
 	public TxPoW getTxPoW() {

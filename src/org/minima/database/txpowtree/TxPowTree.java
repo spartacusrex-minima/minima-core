@@ -279,12 +279,10 @@ public class TxPowTree implements Streamable {
 		TxPoWTreeNodeAction printer = new TxPoWTreeNodeAction() {
 			@Override
 			public void runAction(TxPoWTreeNode zNode) {
-				TxPoW txp 		= zNode.getTxPoW();
-				
-				BigDecimal weight	= txp.getWeight();
-				String ID			= txp.getTxPoWID();
-				MiniNumber block 	= txp.getBlockNumber();
-				int sblk			= txp.getSuperLevel();
+				BigDecimal weight	= zNode.getWeight();
+				String ID			= zNode.getTxPoWID();
+				MiniNumber block 	= zNode.getBlockNumber();
+				int sblk			= zNode.getSuperLevel();
 				
 				//How much to indent..
 				MiniNumber indent 	= block.sub(rootblock); 
@@ -298,13 +296,15 @@ public class TxPowTree implements Streamable {
 				}
 				
 				//Number of Transactions
-				int numtxns = txp.getTransactions().size();
-				if(txp.isTransaction()) {
+				int numtxns = zNode.getTransactions().size();
+				if(zNode.isTransaction()) {
 					numtxns++;
 				}
 				
 				//Block details
-				treestr.append(" "+block+" [0/"+txp.getSuperLevel()+"] "+ID+" txns:"+numtxns+"  weight:"+weight+"/"+zNode.getTotalWeight()+" @ "+new Date(txp.getTimeMilli().getAsLong()).toString()+"\n");
+				treestr.append(" "+block+" [0/"+zNode.getSuperLevel()+"] "
+							+ID+" txns:"+numtxns+"  weight:"+weight+"/"
+							+zNode.getTotalWeight()+" @ "+new Date(zNode.getTimeMilli().getAsLong()).toString()+"\n");
 			}
 		}; 
 		
