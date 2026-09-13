@@ -196,7 +196,7 @@ public class TxBlockDB extends SqlDB {
 		return ret;
 	}
 	
-	public synchronized void clearOld(MiniNumber zMinBlock) {
+	public synchronized int clearOld(MiniNumber zMinBlock) {
 		
 		try {
 			
@@ -208,11 +208,13 @@ public class TxBlockDB extends SqlDB {
 			SQL_CLEAR_OLD.setLong(1, zMinBlock.getAsLong());
 			
 			//Run the query
-			SQL_CLEAR_OLD.executeQuery();
+			return SQL_CLEAR_OLD.executeUpdate();
 			
 		} catch (SQLException e) {
 			MinimaLogger.log(e);
 		}
+		
+		return 0;
 	}
 	
 }
