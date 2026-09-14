@@ -911,6 +911,9 @@ public class Main extends MessageProcessor {
 			//And now close and reopen.. to clear the deleted and refresh the JDBC Driver
 			CoinDB.getTxPoWTreeCoinDB().closeAndReopen();
 			
+			//And now close and reopen.. to clear the deleted and refresh the JDBC Driver
+			MinimaDB.getDB().getTxBlockDB().closeAndReopen();
+			
 		}else if(zMessage.getMessageType().equals(MAIN_AUTOBACKUP_MYSQL)) {
 		
 			UserDB udb = MinimaDB.getDB().getUserDB();

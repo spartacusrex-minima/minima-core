@@ -281,4 +281,25 @@ public class TxBlockDB extends SqlDB {
 		return 0;
 	}
 	
+	/**
+	 * This cleans the JDBC Connection.. so it can start and shutdown quicker
+	 */
+	public synchronized void closeAndReopen() {
+		
+		try {
+			
+			//First close the Connection and save DB.. compact
+			saveDB(true);
+			
+			//And now reopen the DB..
+			mSQLConnection = null;
+			
+			//And now re-open..
+			checkOpen(false);
+			
+		} catch (SQLException e) {
+			MinimaLogger.log(e);
+		}
+	}
+	
 }
