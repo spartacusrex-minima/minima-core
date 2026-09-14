@@ -6,6 +6,7 @@ import java.util.Arrays;
 
 import org.minima.database.MinimaDB;
 import org.minima.objects.Address;
+import org.minima.objects.TxBlock;
 import org.minima.objects.base.MiniData;
 import org.minima.system.commands.Command;
 import org.minima.utils.MinimaLogger;
@@ -19,41 +20,30 @@ public class test extends Command {
 	
 	@Override
 	public ArrayList<String> getValidParams(){
-		return new ArrayList<>(Arrays.asList(new String[]{"show","action"}));
+		return new ArrayList<>(Arrays.asList(new String[]{"txpowid"}));
 	}
 	
 	@Override
 	public JSONObject runCommand() throws Exception {
 		JSONObject ret = getJSONReply();
 	
-		MinimaLogger.log("About to close and reopen DBs");
+		MinimaLogger.log("Check Children..");
+	
+		String txpowid = getParam("txpowid");
 		
-		MinimaDB.getDB().refreshSQLDB();
+		//Search for the children
+		ArrayList<TxBlock> children = MinimaDB.getDB().getTxBlockDB().getChildBlocks(txpowid);
 		
-		MinimaLogger.log("DBs reopened..");
+		MinimaLogger.log("Children found : "+children.size());
+		for(TxBlock child : children) {
+			MinimaLogger.log("Child : "+child.getTxPoW().getBlockNumber()+" "+child.getTxPoW().getTxPoWID());
+		}
 				
-		
 		return ret;
 	}
 	
 	
-	// get a file from the resources folder
-    // works everywhere, IDEA, unit test and JAR file.
-    private InputStream getFileFromResourceAsStream(String fileName) {
-
-        // The class loader that loaded the class
-        ClassLoader classLoader = getClass().getClassLoader();
-        InputStream inputStream = classLoader.getResourceAsStream(fileName);
-
-        // the stream holding the file content
-        if (inputStream == null) {
-            MinimaLogger.log("file not found! " + fileName);
-        }
-            
-        return inputStream;
-
-    }
-	
+		
 	@Override
 	public Command getFunction() {
 		return new test();

@@ -615,6 +615,17 @@ public class TxPoWSearcher {
 	
 	public static Token getToken(MiniData zTokenID) {
 
+		//FIRST check the FAST list
+		synchronized (mImportedTokens) {
+			for(Token tok : mImportedTokens) {
+				
+				//Check the tokenid
+				if(tok.getTokenID().isEqual(zTokenID)) {
+					return tok;
+				}
+			}
+		}
+		
 		//Start node position
 		TxPoWTreeNode tip = MinimaDB.getDB().getTxPoWTree().getTip();
 		
@@ -642,6 +653,11 @@ public class TxPoWSearcher {
 				
 				//Is this the one..
 				if(coin.getTokenID().isEqual(zTokenID)) {
+					
+					//Found IT! - add to the Imported.. for fast look up next time
+					importToken(coin.getToken());
+					
+					//Return the found token
 					return coin.getToken();
 				}
 			}
@@ -661,17 +677,6 @@ public class TxPoWSearcher {
 				
 				//we just did a MEGAMMR check.. that's it..
 				break;
-			}
-		}
-		
-		//NOW - Search the imported tokens 
-		synchronized (mImportedTokens) {
-			for(Token tok : mImportedTokens) {
-				
-				//Check the tokenid
-				if(tok.getTokenID().isEqual(zTokenID)) {
-					return tok;
-				}
 			}
 		}
 		

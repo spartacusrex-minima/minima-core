@@ -1,14 +1,18 @@
 package org.minima.database.archive;
 
+import java.awt.geom.GeneralPath;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.minima.objects.TxBlock;
 import org.minima.objects.base.MiniData;
 import org.minima.objects.base.MiniNumber;
+import org.minima.system.params.GeneralParams;
 import org.minima.utils.MiniUtil;
 import org.minima.utils.MinimaLogger;
 import org.minima.utils.SqlDB;
@@ -23,8 +27,13 @@ public class TxBlockDB extends SqlDB {
 	TxBlock mLastGetBlock = null;
 	TxBlock mLastAddBlock = null;
 	
+	//For FULL RAM Lookup
+	ConcurrentHashMap<String, TxBlock> mTxBlockDB;
+	
 	public TxBlockDB() {
 		super();
+		
+		mTxBlockDB = new ConcurrentHashMap<>();
 	}
 	
 	@Override
@@ -57,6 +66,12 @@ public class TxBlockDB extends SqlDB {
 	}
 	
 	public synchronized void addTxBlock(TxBlock zTxBlock) {
+		
+		//FULL RAM MODE
+		if(!GeneralParams.USE_SQL_COINDB) {
+			mTxBlockDB.put(zTxBlock.getTxPoW().getTxPoWID(), zTxBlock);
+			return;
+		}
 		
 		//Nice optimisation
 		if(mLastAddBlock != null) {
@@ -97,6 +112,11 @@ public class TxBlockDB extends SqlDB {
 	
 	public synchronized TxBlock getTxBlock(String zTxPoWID) {
 		
+		//FULL RAM MODE
+		if(!GeneralParams.USE_SQL_COINDB) {
+			return mTxBlockDB.get(zTxPoWID);
+		}
+		
 		//Nice optimisation
 		if(mLastGetBlock != null) {
 			if(mLastGetBlock.getTxPoW().getTxPoWID().equals(zTxPoWID)) {
@@ -112,7 +132,7 @@ public class TxBlockDB extends SqlDB {
 			}
 		}
 		
-		MiniUtil.PrintStackTrace();
+		//MiniUtil.PrintStackTrace();
 		
 		try {
 			
@@ -159,6 +179,24 @@ public class TxBlockDB extends SqlDB {
 		
 		ArrayList<TxBlock> ret = new ArrayList<>();
 		
+		//FULL RAM MODE
+		if(!GeneralParams.USE_SQL_COINDB) {
+			
+			//Cycle through the blocks..
+			Enumeration<TxBlock> allblocks = mTxBlockDB.elements();
+			while(allblocks.hasMoreElements()) {
+				
+				TxBlock txblock = allblocks.nextElement();
+				
+				//Is it a child..
+				if(txblock.getTxPoW().getParentID().to0xString().equals(zTxPowID)) {
+					ret.add(txblock);
+				}
+			}
+			
+			return ret;
+		}
+		
 		try {
 			
 			//Make sure..
@@ -194,6 +232,30 @@ public class TxBlockDB extends SqlDB {
 	}
 	
 	public synchronized int clearOld(MiniNumber zMinBlock) {
+		
+		//FULL RAM MODE
+		if(!GeneralParams.USE_SQL_COINDB) {
+			
+			int oldsize = mTxBlockDB.size();
+			
+			ConcurrentHashMap<String, TxBlock> newDB = new ConcurrentHashMap();
+			
+			Enumeration<TxBlock> allblocks = mTxBlockDB.elements();
+			while(allblocks.hasMoreElements()) {
+				
+				TxBlock txblock = allblocks.nextElement();
+				
+				if(txblock.getTxPoW().getBlockNumber().isMoreEqual(zMinBlock)) {
+					newDB.put(txblock.getTxPoW().getTxPoWID(), txblock);
+				}
+			}
+			
+			mTxBlockDB = newDB;
+			
+			int newsize = mTxBlockDB.size();
+			
+			return oldsize-newsize;
+		}
 		
 		try {
 			

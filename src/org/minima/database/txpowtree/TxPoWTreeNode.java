@@ -39,17 +39,17 @@ public class TxPoWTreeNode implements Streamable {
 	private boolean  mTxPoWTreeHasState = false;
 	
 	/**
-	 * The SyncBlock that represents this Node
+	 * The important SyncBlock DATA that represents this Node (fast lookup)
 	 */
-	String 		mTxBlockTxPowID;
-	MiniData	mTxPowIDData;
-	MiniNumber 	mBlockNumber;
-	MiniData 	mBlockDifficulty;
-	BigDecimal	mWeight;
-	MiniNumber	mTimeMilli;
-	int 		mSuperLevel;
-	ArrayList<String> mTransactionIDs = new ArrayList<>();
-	boolean mIsTransaction;
+	String 				mTxBlockTxPowID;
+	MiniData			mTxPowIDData;
+	MiniNumber 			mBlockNumber;
+	MiniData 			mBlockDifficulty;
+	BigDecimal			mWeight;
+	MiniNumber			mTimeMilli;
+	int 				mSuperLevel;
+	ArrayList<String> 	mTransactionIDs = new ArrayList<>();
+	boolean 			mIsTransaction;
 	
 	/**
 	 * Parent of this node

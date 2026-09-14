@@ -570,23 +570,20 @@ public class TxPoWProcessor extends MessageProcessor {
 				//Add these node to the cascade;
 				for(TxPoWTreeNode txpnode : cascade) {
 					
-					//Get the TxPoW
-					TxPoW txpow = txpnode.getTxPoW();
-					
-					//These TxPoW are now in the cascade - that can NEVER change..
-					txpdb.setInCascade(txpow.getTxPoWID());
-					for(String txpid : txpow.getTransactions()) {
-						txpdb.setInCascade(txpid);
-					}
-					
 					//Get the Block
 					TxBlock tTxBlock = txpnode.getTxBlock();
+					
+					//These TxPoW are now in the cascade - that can NEVER change..
+					txpdb.setInCascade(txpnode.getTxPoWID());
+					for(String txpid : txpnode.getTransactions()) {
+						txpdb.setInCascade(txpid);
+					}
 					
 					//Store in the ArchiveManager
 					arch.saveBlock(tTxBlock);
 					
 					//And add to the cascade
-					cascdb.addToTip(txpnode.getTxPoW());
+					cascdb.addToTip(tTxBlock.getTxPoW());
 					
 					//Send out Notify Messages for coins added
 					try {
