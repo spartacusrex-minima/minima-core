@@ -103,7 +103,9 @@ public class CoinDB extends SqlDB {
 	public synchronized boolean insertCoin(MiniData zTxPoWTreeID, Coin zCoin, MiniNumber zBlock) {
 		try {
 			
-			MinimaLogger.log("SQLDBCOIN - insertCoin block:"+zBlock+" coin:"+zCoin.toJSON());
+			if(GeneralParams.LOG_SQL_COINTXBLOCKDB) {
+				MinimaLogger.log("SQLDBCOIN - insertCoin block:"+zBlock+" coin:"+zCoin.toJSON());
+			}
 			
 			//Make sure..
 			if(checkOpen()) {
@@ -139,6 +141,10 @@ public class CoinDB extends SqlDB {
 		ArrayList<Coin> coins = new ArrayList<>();
 		
 		try {
+			
+			if(GeneralParams.LOG_SQL_COINTXBLOCKDB) {
+				MinimaLogger.log("SQLDBCOIN - getAllCoins");
+			}
 			
 			//Make sure..
 			if(checkOpen()) {
@@ -208,7 +214,9 @@ public class CoinDB extends SqlDB {
 				//Convert into a Coin..
 				Coin cc = Coin.convertMiniDataVersion(minicoin);
 				
-				MinimaLogger.log("SQLDBCOIN - getCoin : "+cc.toJSON());
+				if(GeneralParams.LOG_SQL_COINTXBLOCKDB) {
+					MinimaLogger.log("SQLDBCOIN - getCoin : "+cc.toJSON());
+				}
 				
 				//Return this coin - there may be more than one but they are all the same
 				return cc;

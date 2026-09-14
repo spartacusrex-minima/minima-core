@@ -84,7 +84,9 @@ public class TxBlockDB extends SqlDB {
 		//Store for later
 		mLastAddBlock = zTxBlock;
 		
-		//MinimaLogger.log("TxBlockDB AddBlock "+zTxBlock.getTxPoW().getBlockNumber()+" "+zTxBlock.getTxPoW().getTxPoWID());
+		if(GeneralParams.LOG_SQL_COINTXBLOCKDB) {
+			MinimaLogger.log("TxBlockDB AddBlock "+zTxBlock.getTxPoW().getBlockNumber()+" "+zTxBlock.getTxPoW().getTxPoWID());
+		}
 		
 		try {
 			//Make sure..
@@ -111,8 +113,6 @@ public class TxBlockDB extends SqlDB {
 	}
 	
 	public synchronized TxBlock getTxBlock(String zTxPoWID) {
-		
-		//MinimaLogger.log("TxBlockDB GetBlock "+zTxPoWID);
 		
 		//FULL RAM MODE
 		if(!GeneralParams.USE_SQL_TXBLOCKDB) {
@@ -163,7 +163,10 @@ public class TxBlockDB extends SqlDB {
 				//SAVE IT
 				mLastGetBlock = sb;
 		
-				//MinimaLogger.log("TxBlockDB GetBlock "+zTxPoWID+" "+mLastGetBlock.getTxPoW().getBlockNumber());
+				if(GeneralParams.LOG_SQL_COINTXBLOCKDB) {
+					MinimaLogger.log("TxBlockDB GetBlock "+zTxPoWID+" "+mLastGetBlock.getTxPoW().getBlockNumber());
+				}
+				
 				
 				return sb;
 			}

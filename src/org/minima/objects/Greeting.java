@@ -63,21 +63,18 @@ public class Greeting implements Streamable {
 			}
 			getExtraData().put("port",""+GeneralParams.MINIMA_PORT);
 			
-			//Add My Maxima MLS identity
-//			getExtraData().put("maximamls",Main.getInstance().getMaxima().getMaximaMLSIdentity());
-			
 			//Add the chain..
 			TxPoWTreeNode tip = MinimaDB.getDB().getTxPoWTree().getTip();
 			if(tip == null) {
 				//First time user
 				setTopBlock(MiniNumber.MINUSONE);
 			}else {
-				setTopBlock(tip.getTxPoW().getBlockNumber());
+				setTopBlock(tip.getBlockNumber());
 			}
 			
 			//Add all the chain
 			while(tip != null) {
-				mChain.add(tip.getTxPoW().getTxPoWIDData());
+				mChain.add(tip.getTxPoWIDData());
 				tip = tip.getParent();
 			}
 			

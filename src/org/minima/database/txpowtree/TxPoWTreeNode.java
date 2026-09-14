@@ -476,8 +476,6 @@ public class TxPoWTreeNode implements Streamable {
 		//Only bother using DB if there is some state in one of the coins
 		if(GeneralParams.USE_SQL_COINDB && mTxPoWTreeHasState) {
 			
-			MinimaLogger.log("Get ALL coins FULL State use SQLDB.. block:"+getBlockNumber());
-		
 			//Return the complete set..
 			return CoinDB.getTxPoWTreeCoinDB().getAllCoins(mTxPoWTreeID);
 			

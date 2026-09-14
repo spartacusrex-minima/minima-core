@@ -349,11 +349,8 @@ public class TxPoWSearcher {
 		//Now cycle through and get all your coins..
 		while(tip != null) {
 
-			//The Block
-			TxPoW txblock = tip.getTxPoW();
-			
 			//Is this block the txn
-			if(txblock.getTxPoWIDData().isEqual(zTxPoWID)) {
+			if(tip.getTxPoWIDData().isEqual(zTxPoWID)) {
 				return tip;
 			}
 			

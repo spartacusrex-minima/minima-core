@@ -417,6 +417,17 @@ public class ParamConfigurer {
                 GeneralParams.USE_SQL_TXBLOCKDB = true;
             }
         }),
+        lowram("lowram", "Use SQL for CoinDB and TxBlock DB", (args, configurer) -> {
+            if ("true".equals(args)) {
+            	GeneralParams.USE_SQL_COINDB 	= true;
+            	GeneralParams.USE_SQL_TXBLOCKDB = true;
+            }
+        }),
+        logsqldb("logsqldb", "Log access to CoinDB and TxBlockDB", (args, configurer) -> {
+            if ("true".equals(args)) {
+                GeneralParams.LOG_SQL_COINTXBLOCKDB = true;
+            }
+        }),
         genesis("genesis", "Create a genesis block, -clean and -automine", (args, configurer) -> {
             if ("true".equals(args)) {
                 GeneralParams.CLEAN = true;

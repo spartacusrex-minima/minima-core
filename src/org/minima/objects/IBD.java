@@ -146,8 +146,6 @@ public class IBD implements Streamable {
 								blockcounter++;
 							}
 							
-							MinimaLogger.log("!toobig createIBD "+blockcounter);
-							
 							//And NOW - Load the range..
 							ArrayList<TxBlock> blocks = MinimaDB.getDB().getArchive().loadBlockRange(found, myroot);
 							for(TxBlock block : blocks) {
@@ -237,7 +235,7 @@ public class IBD implements Streamable {
 							tip = tip.getParent();
 						}
 						
-						MinimaLogger.log("Didwe find it.. createIBD "+blockcounter);
+						//MinimaLogger.log("Didwe find it.. createIBD "+blockcounter);
 						
 					}else {
 						MinimaLogger.log("[!] When creating IBD - No Crossover found whilst syncing with new node. They are on a different chain. Please check you are on the correct chain");

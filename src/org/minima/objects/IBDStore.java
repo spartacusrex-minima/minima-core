@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import org.minima.database.MinimaDB;
 import org.minima.database.cascade.Cascade;
 import org.minima.database.txpowtree.TxPoWTreeNode;
-import org.minima.utils.MinimaLogger;
 
 public class IBDStore {
 
@@ -15,7 +14,7 @@ public class IBDStore {
 	ArrayList<TxBlock> mTxBlocks = new ArrayList<>();
 	
 	long mTimeLastCreate = 0;
-	long mWaitTime	 	 = 60000;
+	long mWaitTime	 	 = 100000;
 	
 	public IBDStore() {}
 	
@@ -38,11 +37,6 @@ public class IBDStore {
 			mTxBlocks.add(0,tip.getTxBlock());
 			tip = tip.getParent();
 		}
-		
-		long timefinish = System.currentTimeMillis();
-		long timdiff = timefinish - timenow;
-		
-		MinimaLogger.log("IBDSTORE CREATE COMPLETE IBD : "+timdiff+"ms");
 	}
 	
 	public synchronized void setComplete(IBD zIBD) {

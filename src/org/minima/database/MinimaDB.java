@@ -380,6 +380,9 @@ public class MinimaDB {
 			CoinDB.createCoinDB(new File(coindbsqlfolder,"coins.db"));
 			
 			//The TxBlock specific DB
+			if(GeneralParams.USE_SQL_TXBLOCKDB) {
+				MinimaLogger.log("Using low ram SQL TxBlockDB in TxPoWTree");
+			}
 			File txblocksqlfolder = new File(basedb,"txblockdb");
 			MiniFile.deleteFileOrFolder(txblocksqlfolder.getAbsolutePath(), txblocksqlfolder);
 			mTxBlockDB.loadDB(new File(txblocksqlfolder,"txblock.db"));
