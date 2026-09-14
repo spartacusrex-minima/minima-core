@@ -133,14 +133,26 @@ public class TxPoWTreeNode implements Streamable {
 		mIsTransaction		= txpow.isTransaction();
 	}
 	
-//	//Used in tests..
-//	public TxPoWTreeNode(TxPoW zTestTxPoW) {
-//		mTxBlock		= new TxBlock(zTestTxPoW);
-//		mChildren 	 	= new ArrayList<>();
-//		mTotalWeight 	= BigDecimal.ZERO;
-//		mParent			= null;
-//		mMMR			= new MMR();
-//	}
+	//Used in tests..
+	public TxPoWTreeNode(TxPoW zTestTxPoW) {
+		TxBlock tblock = new TxBlock(zTestTxPoW);
+
+		GeneralParams.USE_SQL_COINDB = false;
+		
+		//Make sure is in TxBlockDB
+		if(MinimaDB.getDB() == null) {
+			MinimaDB.createDB();
+		}
+		MinimaDB.getDB().getTxBlockDB().addTxBlock(tblock);
+		
+		//Store the details
+		setTxBlockDetails(tblock);
+		
+		mChildren 	 	= new ArrayList<>();
+		mTotalWeight 	= BigDecimal.ZERO;
+		mParent			= null;
+		mMMR			= new MMR();
+	}
 	
 	/**
 	 * Convert the TxBlock 

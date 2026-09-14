@@ -388,6 +388,11 @@ public class GeneralParams {
 	/**
 	 * Use a SQL backed CoinDB in TxpowTree
 	 */
+	public static boolean USE_SQL_TXBLOCKDB = false;
+	
+	/**
+	 * Use a SQL backed CoinDB in TxpowTree
+	 */
 	public static boolean LIMIT_IBD_30MINS = true;
 	
 	/**

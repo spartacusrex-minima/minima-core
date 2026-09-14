@@ -18,6 +18,7 @@ import org.minima.objects.base.MiniByte;
 import org.minima.objects.base.MiniData;
 import org.minima.objects.base.MiniNumber;
 import org.minima.system.Main;
+import org.minima.utils.MiniUtil;
 import org.minima.utils.MinimaLogger;
 import org.minima.utils.Streamable;
 
@@ -26,7 +27,7 @@ public class IBD implements Streamable {
 	/**
 	 * Maximum numbver of cblocks in an IBD
 	 */
-	public static final MiniNumber MAX_BLOCKS_FOR_IBD = new MiniNumber(34000);
+	public static final MiniNumber MAX_BLOCKS_FOR_IBD = new MiniNumber(20000);
 	
 	/**
 	 * The back end Cascade - only sent for a new user - can be null
@@ -37,6 +38,11 @@ public class IBD implements Streamable {
 	 * List of Sync blocks
 	 */
 	ArrayList<TxBlock> mTxBlocks;
+	
+	/**
+	 * The IBD Store
+	 */
+	static IBDStore mIBDStore = new IBDStore();
 	
 	public IBD() {
 		mCascade	= null;
@@ -84,9 +90,9 @@ public class IBD implements Streamable {
 				createCompleteIBD();
 				
 			}else {
-				MiniNumber myroot 		= txptree.getRoot().getTxBlock().getTxPoW().getBlockNumber();
+				MiniNumber myroot 		= txptree.getRoot().getBlockNumber();
 				TxPoWTreeNode tip 		= txptree.getTip();
-				MiniNumber mytip 		= tip.getTxBlock().getTxPoW().getBlockNumber();
+				MiniNumber mytip 		= tip.getBlockNumber();
 				
 				if(greettip.isLess(myroot)) {
 					//Their chain is behind our cascade.. Will need to send him Archived Sync Blocks! AND the full chain
@@ -133,10 +139,14 @@ public class IBD implements Streamable {
 						if(!toobig) {
 							
 							//Add the whole tree first
+							int blockcounter=0;
 							while(tip != null) {
 								mTxBlocks.add(0,tip.getTxBlock());
 								tip = tip.getParent();
+								blockcounter++;
 							}
+							
+							MinimaLogger.log("!toobig createIBD "+blockcounter);
 							
 							//And NOW - Load the range..
 							ArrayList<TxBlock> blocks = MinimaDB.getDB().getArchive().loadBlockRange(found, myroot);
@@ -192,7 +202,7 @@ public class IBD implements Streamable {
 					//Create a string array of our blocks..
 					HashSet<String> myblocks = new HashSet<>();
 					while(tip != null) {
-						myblocks.add(tip.getTxPoW().getTxPoWID());
+						myblocks.add(tip.getTxPoWID());
 						tip = tip.getParent();
 					}
 					
@@ -210,12 +220,14 @@ public class IBD implements Streamable {
 					if(found) {
 						
 						//Send from then onwards as SyncBlocks..
+						int blockcounter=0;
 						tip = MinimaDB.getDB().getTxPoWTree().getTip();
 						while(tip != null) {
-							String currentid = tip.getTxPoW().getTxPoWID();
+							String currentid = tip.getTxPoWID();
 							
 							if(!currentid.equals(foundblockID)) {
 								mTxBlocks.add(0,tip.getTxBlock());
+								blockcounter++;
 							}else {
 								//That's all of them..
 								break;
@@ -224,6 +236,9 @@ public class IBD implements Streamable {
 							//Move back..
 							tip = tip.getParent();
 						}
+						
+						MinimaLogger.log("Didwe find it.. createIBD "+blockcounter);
+						
 					}else {
 						MinimaLogger.log("[!] When creating IBD - No Crossover found whilst syncing with new node. They are on a different chain. Please check you are on the correct chain");
 						
@@ -245,17 +260,27 @@ public class IBD implements Streamable {
 		return isvalid;
 	}
 	
+	/**
+	 * Store this every 5 mins..!
+	 */
 	public void createCompleteIBD() throws IOException {
-		//First copy the current Cascade
-		mCascade = MinimaDB.getDB().getCascade().deepCopy();
-	
-		//And now add all the blocks.. root will be first
-		mTxBlocks = new ArrayList<>();
-		TxPoWTreeNode tip = MinimaDB.getDB().getTxPoWTree().getTip();
-		while(tip != null) {
-			mTxBlocks.add(0,tip.getTxBlock());
-			tip = tip.getParent();
-		}
+		
+		//Create if necessary
+		mIBDStore.createComplete();
+		
+		//Set the details
+		mIBDStore.setComplete(this);		
+		
+//		//First copy the current Cascade
+//		mCascade = MinimaDB.getDB().getCascade().deepCopy();
+//	
+//		//And now add all the blocks.. root will be first
+//		mTxBlocks = new ArrayList<>();
+//		TxPoWTreeNode tip = MinimaDB.getDB().getTxPoWTree().getTip();
+//		while(tip != null) {
+//			mTxBlocks.add(0,tip.getTxBlock());
+//			tip = tip.getParent();
+//		}
 	}
 	
 	public void createSyncIBD(TxPoW zLastBlock) {

@@ -68,7 +68,7 @@ public class TxBlockDB extends SqlDB {
 	public synchronized void addTxBlock(TxBlock zTxBlock) {
 		
 		//FULL RAM MODE
-		if(!GeneralParams.USE_SQL_COINDB) {
+		if(!GeneralParams.USE_SQL_TXBLOCKDB) {
 			mTxBlockDB.put(zTxBlock.getTxPoW().getTxPoWID(), zTxBlock);
 			return;
 		}
@@ -84,7 +84,7 @@ public class TxBlockDB extends SqlDB {
 		//Store for later
 		mLastAddBlock = zTxBlock;
 		
-		MinimaLogger.log("TxBlockDB AddBlock "+zTxBlock.getTxPoW().getBlockNumber()+" "+zTxBlock.getTxPoW().getTxPoWID());
+		//MinimaLogger.log("TxBlockDB AddBlock "+zTxBlock.getTxPoW().getBlockNumber()+" "+zTxBlock.getTxPoW().getTxPoWID());
 		
 		try {
 			//Make sure..
@@ -112,8 +112,10 @@ public class TxBlockDB extends SqlDB {
 	
 	public synchronized TxBlock getTxBlock(String zTxPoWID) {
 		
+		//MinimaLogger.log("TxBlockDB GetBlock "+zTxPoWID);
+		
 		//FULL RAM MODE
-		if(!GeneralParams.USE_SQL_COINDB) {
+		if(!GeneralParams.USE_SQL_TXBLOCKDB) {
 			return mTxBlockDB.get(zTxPoWID);
 		}
 		
@@ -161,7 +163,7 @@ public class TxBlockDB extends SqlDB {
 				//SAVE IT
 				mLastGetBlock = sb;
 		
-				MinimaLogger.log("TxBlockDB GetBlock "+zTxPoWID+" "+mLastGetBlock.getTxPoW().getBlockNumber());
+				//MinimaLogger.log("TxBlockDB GetBlock "+zTxPoWID+" "+mLastGetBlock.getTxPoW().getBlockNumber());
 				
 				return sb;
 			}
@@ -180,7 +182,7 @@ public class TxBlockDB extends SqlDB {
 		ArrayList<TxBlock> ret = new ArrayList<>();
 		
 		//FULL RAM MODE
-		if(!GeneralParams.USE_SQL_COINDB) {
+		if(!GeneralParams.USE_SQL_TXBLOCKDB) {
 			
 			//Cycle through the blocks..
 			Enumeration<TxBlock> allblocks = mTxBlockDB.elements();
@@ -234,7 +236,7 @@ public class TxBlockDB extends SqlDB {
 	public synchronized int clearOld(MiniNumber zMinBlock) {
 		
 		//FULL RAM MODE
-		if(!GeneralParams.USE_SQL_COINDB) {
+		if(!GeneralParams.USE_SQL_TXBLOCKDB) {
 			
 			int oldsize = mTxBlockDB.size();
 			

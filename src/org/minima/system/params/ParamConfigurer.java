@@ -412,6 +412,11 @@ public class ParamConfigurer {
                 GeneralParams.USE_SQL_COINDB = true;
             }
         }),
+        sqltxblockdb("sqltxblockdb", "For Low ram systems.. Use a SQL txpowdb in txpowtree", (args, configurer) -> {
+            if ("true".equals(args)) {
+                GeneralParams.USE_SQL_TXBLOCKDB = true;
+            }
+        }),
         genesis("genesis", "Create a genesis block, -clean and -automine", (args, configurer) -> {
             if ("true".equals(args)) {
                 GeneralParams.CLEAN = true;
