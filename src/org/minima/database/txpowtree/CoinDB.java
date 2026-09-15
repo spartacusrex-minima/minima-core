@@ -295,12 +295,22 @@ public class CoinDB extends SqlDB {
 			//Get the FULL Coin Details
 			Coin fullcoin = getCoin(cc.getCoinID());
 			
-			//Set correct state and token
-			cc.setState(fullcoin.getState());
-			cc.setToken(fullcoin.getToken());
+			//Is it in there ?
+			if(fullcoin == null) {
+				
+				//MUST be a MEGAMMR coin.. JUST add in full
+				fullcoins.add(cc);
+				
+			}else {
+				
+				//Set correct state and token - BUT keep the REST of the details (SPENT etc..)
+				cc.setState(fullcoin.getState());
+				cc.setToken(fullcoin.getToken());
+				
+				//A normal coin.. just add..
+				fullcoins.add(cc);
+			}
 			
-			//A normal coin.. just add..
-			fullcoins.add(cc);
 		}
 		
 		return fullcoins;

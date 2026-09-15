@@ -251,10 +251,10 @@ public class TxPoWSearcher {
 			return finalcoins;
 		}
 		
-		//Relevant coins have ALL the data
-		if(zRelevant) {
-			return finalcoins;
-		}
+//		//Relevant coins have ALL the data
+//		if(zRelevant) {
+//			return finalcoins;
+//		}
 		
 		//Normal search needs to convert the coins..
 		return CoinDB.getTxPoWTreeCoinDB().convertNoStateCoinsCopy(finalcoins);

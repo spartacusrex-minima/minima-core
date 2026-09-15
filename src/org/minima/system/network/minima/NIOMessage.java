@@ -386,7 +386,7 @@ public class NIOMessage implements Runnable {
 				//Have we sent an IBD message already..
 				String miniaddress = nioclient.getFullMinimaAddress();
 				if(GeneralParams.LIMIT_IBD_30MINS && mHaveSentIBDRecently.contains(miniaddress)) {
-					MinimaLogger.log("Already sent an IBD to "+miniaddress+" in last 30 mins..");
+					//MinimaLogger.log("Already sent an IBD to "+miniaddress+" in last 30 mins..");
 					
 				}else {
 					
