@@ -333,4 +333,15 @@ public class UserDB extends JsonDB{
 	public void setRPCUsers(JSONArray zNewUsers) {
 		setJSONArray("rpcusers_allusers", zNewUsers);
 	}
+	
+	/**
+	 * If you are using BLOCK as KEY USES..
+	 */
+	public MiniNumber getLastBlockAsKeyUses() {
+		return getNumber("last_block_as_keysuses", MiniNumber.ZERO);
+	}
+	
+	public void setLastBlockAsKeyUses(MiniNumber zLastUsed) {
+		setNumber("last_block_as_keysuses", zLastUsed);
+	}
 }

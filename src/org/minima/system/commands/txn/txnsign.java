@@ -21,6 +21,8 @@ import org.minima.system.brains.TxPoWGenerator;
 import org.minima.system.commands.Command;
 import org.minima.system.commands.CommandException;
 import org.minima.system.commands.backup.vault;
+import org.minima.system.commands.base.block;
+import org.minima.system.params.GeneralParams;
 import org.minima.utils.json.JSONArray;
 import org.minima.utils.json.JSONObject;
 
@@ -149,14 +151,36 @@ public class txnsign extends Command {
 			//Get the private key
 			MiniData privkey = getDataParam("privatekey");
 			
-			//Get uses..
-			MiniNumber uses = getNumberParam("keyuses");
+			//Are we using BLOCK as key uses..
+			MiniNumber uses = MiniNumber.MINUSONE;
+			if(!GeneralParams.USE_BLOCK_AS_KEYUSES) {
+				
+				//Get USER SPECIFIED uses..
+				uses = getNumberParam("keyuses");
+			}else {
+				
+				//They MAY still specify one.. - the HIGHER value will still be used..
+				if(existsParam("keyuses")) {
+					uses = getNumberParam("keyuses");
+				}
+			}
 			
 			//Make the TreeKey
 			TreeKey treekey = TreeKey.createDefault(privkey);
 			
-			//Set uses..
-			treekey.setUses(uses.getAsInt());
+			//Are we using BLOCK as key uses..
+			if(GeneralParams.USE_BLOCK_AS_KEYUSES) {
+				
+				//Get the NEXT viable key uses based on block and previous uses..
+				MiniNumber currentkeyuses = block.getCurrentBlockAsKeyUses(uses.getAsInt());
+				
+				//Set this..
+				treekey.setUses(currentkeyuses.getAsInt());
+				
+			}else {
+				//Set uses..
+				treekey.setUses(uses.getAsInt());
+			}
 			
 			//Now we have the Key.. sign the Txn ID
 			Signature signature = treekey.sign(txn.getTransactionID());

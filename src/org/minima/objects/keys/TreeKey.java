@@ -1,10 +1,12 @@
 package org.minima.objects.keys;
 
+import java.awt.geom.GeneralPath;
 import java.util.ArrayList;
 import java.util.Collections;
 
 import org.minima.objects.base.MiniData;
 import org.minima.objects.mmr.MMRProof;
+import org.minima.system.params.GeneralParams;
 import org.minima.utils.MiniFormat;
 import org.minima.utils.MinimaLogger;
 
@@ -19,10 +21,22 @@ public class TreeKey {
 	/**
 	 * Default Values
 	 */
-	public static final int DEFAULT_KEYSPERLEVEL = 64;
-	public static final int DEFAULT_LEVELS 		 = 3;
+	private static final int DEFAULT_KEYSPERLEVEL 	= 64;
+	private static final int DEFAULT_LEVELS 		= 3;
+	
+	/**
+	 * Are we USING LEGACY keys or the NEW Block as Keys Uses ?
+	 */
 	
 	public static TreeKey createDefault(MiniData zPrivateSeed) {
+		
+		//ARE WE USING THE LARGER BLOCK AS KEY USES.. ?
+		if(GeneralParams.USE_BLOCK_AS_KEYUSES) {
+			//Generate A LOT more keys 1.3 billion 
+			return new TreeKey(zPrivateSeed, 192, 4);
+		}
+		
+		//Return the NORMAL LEGACY TREE KEY
 		return new TreeKey(zPrivateSeed, DEFAULT_KEYSPERLEVEL, DEFAULT_LEVELS);
 	}
 	
@@ -86,6 +100,12 @@ public class TreeKey {
 	}
 	
 	public void setUses(int zUses) {
+		
+		//Make sure is valid
+		if(zUses<0) {
+			throw new IllegalArgumentException("CANNOT HAVE NEGATIVE KEY USES : "+zUses);
+		}
+		
 		mUses = zUses;
 	}
 	
@@ -257,28 +277,17 @@ public class TreeKey {
 	
 	public static void main(String[] zArgs) {
 		
+		System.out.println("HELLO!");
+	
+		GeneralParams.USE_BLOCK_AS_KEYUSES = true;
+		
 		MiniData seed 	= new MiniData("0x000102");
 		
-		TreeKey kt 	 	= new TreeKey(seed, 4, 4);
+		TreeKey kt 	 	= TreeKey.createDefault(seed);
 		
-		//Set the pub key
-		MiniData pk = kt.getPublicKey();
+		int num = kt.getMaxUses();
 		
-		MiniData data = new MiniData("0xFF");
-//		MiniData data = MiniData.getRandomData(32);
-//		MinimaLogger.log("DATA "+data.to0xString(32));
-		
-		Signature sig = kt.sign(data);
-		MinimaLogger.log("1");
-		MinimaLogger.log(MiniFormat.JSONPretty(sig.toJSON()));
-		
-		sig = kt.sign(data);
-		MinimaLogger.log("2");
-		MinimaLogger.log(MiniFormat.JSONPretty(sig.toJSON()));
-		
-//		MinimaLogger.log(convertBase(10, 16).toString());
-//		MinimaLogger.log(baseConversion(new MiniNumber(27), 29, 4).toString());
-		
-		
+		System.out.println("MAX KEYS : "+num);
+			
 	}
 }

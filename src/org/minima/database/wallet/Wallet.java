@@ -11,8 +11,10 @@ import java.util.Random;
 
 import org.minima.objects.Address;
 import org.minima.objects.base.MiniData;
+import org.minima.objects.base.MiniNumber;
 import org.minima.objects.keys.Signature;
 import org.minima.objects.keys.TreeKey;
+import org.minima.system.commands.base.block;
 import org.minima.system.commands.send.multisig;
 import org.minima.system.params.GeneralParams;
 import org.minima.utils.BIP39;
@@ -822,8 +824,19 @@ public class Wallet extends SqlDB {
 			//How many times has this been used.. get from DB
 			int uses = key.getUses();
 			
-			//Set this..
-			tk.setUses(uses);
+			//Are we using BLOCK as key uses..
+			if(GeneralParams.USE_BLOCK_AS_KEYUSES) {
+				
+				//Get the NEXT viable key uses based on block and previous uses..
+				MiniNumber currentkeyuses = block.getCurrentBlockAsKeyUses(uses);
+				
+				//Set this..
+				tk.setUses(currentkeyuses.getAsInt());
+				
+			}else {
+				//Set this..
+				tk.setUses(uses);
+			}
 			
 			//Now we have the Key..
 			Signature signature = tk.sign(zData);

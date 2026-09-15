@@ -186,6 +186,11 @@ public class ParamConfigurer {
     		//Set this globally
     		GeneralParams.BASE_FILE_FOLDER = backupfolder.getAbsolutePath();
         }),
+    	blockaskeyuses("blockaskeyuses", "CAREFUL - creates a different ADDRESS (MUCH bigger total keys) but now keyuses is current block", (args, configurer) -> {
+            if ("true".equals(args)) {
+                GeneralParams.USE_BLOCK_AS_KEYUSES = true;
+            }
+        }),
     	host("host", "Specify the host IP", (arg, configurer) -> {
             GeneralParams.MINIMA_HOST = arg;
             GeneralParams.IS_HOST_SET = true;

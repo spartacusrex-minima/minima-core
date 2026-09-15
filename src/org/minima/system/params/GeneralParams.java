@@ -401,6 +401,15 @@ public class GeneralParams {
 	public static boolean LIMIT_IBD_30MINS = true;
 	
 	/**
+	 * Use a DIFFERENT keys type - MORE keys and blocknumber as Key uses!
+	 * 
+	 * This is INCOMPATIBLE with the OLD SEED - you get a different address
+	 * 
+	 * This is because you need BILLIONS of possible addresses..
+	 */
+	public static boolean USE_BLOCK_AS_KEYUSES = false;
+	
+	/**
 	 * Reset all params to their default settings.. ANDROID keeps them after shutdown
 	 */
 	public static void resetDefaults() {
@@ -489,6 +498,11 @@ public class GeneralParams {
 		ALLOW_GEN_MESSAGE 		= false;
 		
 		USE_SQL_COINDB 			= false;
+		USE_SQL_TXBLOCKDB 		= false;
+		
+		USE_BLOCK_AS_KEYUSES 	= false;
+		
+		LOG_SQL_COINTXBLOCKDB 	= false;
 		
 		LIMIT_IBD_30MINS 		= true;
 	}
