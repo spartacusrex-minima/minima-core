@@ -7,7 +7,6 @@ import org.minima.database.MinimaDB;
 import org.minima.database.userprefs.txndb.TxnDB;
 import org.minima.database.userprefs.txndb.TxnRow;
 import org.minima.objects.Coin;
-import org.minima.objects.StateVariable;
 import org.minima.objects.Token;
 import org.minima.objects.Transaction;
 import org.minima.objects.base.MiniData;

@@ -1,6 +1,5 @@
 package org.minima.database.archive;
 
-import java.awt.geom.GeneralPath;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -13,7 +12,6 @@ import org.minima.objects.TxBlock;
 import org.minima.objects.base.MiniData;
 import org.minima.objects.base.MiniNumber;
 import org.minima.system.params.GeneralParams;
-import org.minima.utils.MiniUtil;
 import org.minima.utils.MinimaLogger;
 import org.minima.utils.SqlDB;
 

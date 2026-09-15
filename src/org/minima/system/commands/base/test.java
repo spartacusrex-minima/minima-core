@@ -1,6 +1,5 @@
 package org.minima.system.commands.base;
 
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 

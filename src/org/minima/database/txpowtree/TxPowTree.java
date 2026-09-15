@@ -13,7 +13,6 @@ import java.util.Hashtable;
 import org.minima.database.MinimaDB;
 import org.minima.database.archive.TxBlockDB;
 import org.minima.database.txpowdb.TxPoWDB;
-import org.minima.objects.TxPoW;
 import org.minima.objects.base.MiniData;
 import org.minima.objects.base.MiniNumber;
 import org.minima.utils.MiniFile;

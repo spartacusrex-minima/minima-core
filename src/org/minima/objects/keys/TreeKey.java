@@ -1,13 +1,11 @@
 package org.minima.objects.keys;
 
-import java.awt.geom.GeneralPath;
 import java.util.ArrayList;
 import java.util.Collections;
 
 import org.minima.objects.base.MiniData;
 import org.minima.objects.mmr.MMRProof;
 import org.minima.system.params.GeneralParams;
-import org.minima.utils.MiniFormat;
 import org.minima.utils.MinimaLogger;
 
 
