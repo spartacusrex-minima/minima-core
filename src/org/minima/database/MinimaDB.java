@@ -285,6 +285,11 @@ public class MinimaDB {
 		
 		try {
 			
+			//Are we on the NEW System..
+			if(GeneralParams.USE_BLOCK_AS_KEYUSES) {
+				MinimaLogger.log("Using NEW Block number as key uses keys!");
+			}
+			
 			//Get the base Database folder
 			File basedb = getBaseDBFolder();
 			

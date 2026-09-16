@@ -85,6 +85,11 @@ public class Wallet extends SqlDB {
 	public Wallet() {
 		super();
 		
+		//ONLY 32 keys - each can be used 1 a billion times..
+		if(GeneralParams.USE_BLOCK_AS_KEYUSES) {
+			NUMBER_GETADDRESS_KEYS = 32;
+		}
+		
 		//Are we testing..
 		if(GeneralParams.TEST_PARAMS) {
 			NUMBER_GETADDRESS_KEYS = 8;
