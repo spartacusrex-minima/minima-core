@@ -13,6 +13,7 @@ import org.minima.utils.Crypto;
 import org.minima.utils.MinimaLogger;
 import org.minima.utils.Streamable;
 import org.minima.utils.json.JSONObject;
+import org.minima.utils.json.parser.JSONParser;
 
 public class Token implements Streamable{
 	
@@ -171,6 +172,22 @@ public class Token implements Streamable{
 		
 		
 		return obj;
+	}
+	
+	public static String getTokenName(Token zToken) {
+		
+		if(zToken.getTokenID().equals(Token.TOKENID_MINIMA)) {
+			return "Minima";
+		}
+		
+		MiniString tok 		= zToken.getName();
+		try {
+			JSONObject tokobj = (JSONObject) new JSONParser().parse(tok.toString());
+			return tokobj.getString("name");
+			
+		}catch(Exception e) {
+			return "Error token name..";
+		}
 	}
 	
 	private void calculateTokenID() {

@@ -11,11 +11,13 @@ import org.minima.database.txpowdb.sql.TxPoWSqlDB;
 import org.minima.database.txpowtree.TxPoWTreeNode;
 import org.minima.database.wallet.Wallet;
 import org.minima.objects.Coin;
+import org.minima.objects.Token;
 import org.minima.objects.Transaction;
 import org.minima.objects.TxPoW;
 import org.minima.objects.base.MiniNumber;
 import org.minima.system.commands.Command;
 import org.minima.system.commands.CommandException;
+import org.minima.utils.MinimaLogger;
 import org.minima.utils.json.JSONArray;
 import org.minima.utils.json.JSONObject;
 
@@ -143,7 +145,7 @@ public class history extends Command {
 			}else {
 				txps = MinimaDB.getDB().getTxPoWDB().getSQLDB().getLatestTxPoW(max,offset);
 			}
-				
+			
 			JSONArray txns 			= new JSONArray();
 			JSONArray txndetails 	= new JSONArray();
 			for(TxPoW txp : txps) {
@@ -179,30 +181,41 @@ public class history extends Command {
 		//Get the wallet..
 		Wallet wal = MinimaDB.getDB().getWallet();
 		
+		//The NAME of the Token
+		JSONObject tokenname = new JSONObject();
+		
 		//Cycle through the Inputs.. are they relevant
 		ArrayList<Coin> inputs = trans.getAllInputs();
 		for(Coin cc : inputs) {
 			
 			//Do we add it..
-			String addr = cc.getAddress().to0xString();
-			String tok  = cc.getTokenID().to0xString();
+			String addr 	= cc.getAddress().to0xString();
+			String tokenid  = cc.getTokenID().to0xString();
+			
+			String name	= "Minima";
+			if(cc.getToken() != null) {
+				name = Token.getTokenName(cc.getToken());
+			}
 			
 			if(wal.isAddressRelevant(addr)) {
 				//Do we have it..
-				MiniNumber tot = inamounts.get(tok);
+				MiniNumber tot = inamounts.get(tokenid);
 				if(tot == null) {
 					tot = MiniNumber.ZERO;
 				}
 				
 				//Add to the correct token value
-				if(tok.equals("0x00")) {
+				if(tokenid.equals("0x00")) {
 					tot = tot.add(cc.getAmount());
 				}else {
 					tot = tot.add(cc.getTokenAmount());
 				}
 				
 				//And add back
-				inamounts.put(tok, tot);
+				inamounts.put(tokenid, tot);
+				
+				//Add to the name list
+				tokenname.put(tokenid, name);
 			}
 		}
 		
@@ -212,24 +225,32 @@ public class history extends Command {
 			
 			//Do we add it..
 			String addr = cc.getAddress().to0xString();
-			String tok  = cc.getTokenID().to0xString();
+			String tokenid  = cc.getTokenID().to0xString();
+			
+			String name	= "Minima";
+			if(cc.getToken() != null) {
+				name = Token.getTokenName(cc.getToken());
+			}
 			
 			if(wal.isAddressRelevant(addr)) {
 				//Do we have it..
-				MiniNumber tot = outamounts.get(tok);
+				MiniNumber tot = outamounts.get(tokenid);
 				if(tot == null) {
 					tot = MiniNumber.ZERO;
 				}
 				
 				//Add to the correct token value
-				if(tok.equals("0x00")) {
+				if(tokenid.equals("0x00")) {
 					tot = tot.add(cc.getAmount());
 				}else {
 					tot = tot.add(cc.getTokenAmount());
 				}
 				
 				//And add back
-				outamounts.put(tok, tot);
+				outamounts.put(tokenid, tot);
+				
+				//Add to the name list
+				tokenname.put(tokenid, name);
 			}
 		}
 		
@@ -284,6 +305,7 @@ public class history extends Command {
 		ret.put("inputs", ins);
 		ret.put("outputs", outs);
 		ret.put("difference", diffs);
+		ret.put("tokens", tokenname);
 		
 		return ret;
 	}
