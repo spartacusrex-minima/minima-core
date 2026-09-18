@@ -161,19 +161,42 @@ public class MiniFile {
 			MinimaLogger.log("Load Object file does not exist : "+zFile.getAbsolutePath());
 			return;
 		}
-		
+
 		try {
 			FileInputStream fis 	= new FileInputStream(zFile);
 			BufferedInputStream bis = new BufferedInputStream(fis,65536);
 			DataInputStream dis 	= new DataInputStream(bis);
 			zObject.readDataStream(dis);
-			
+
 			dis.close();
 			bis.close();
 			fis.close();
-			
+
 		} catch (IOException e) {
 			MinimaLogger.log(e);
+		}
+	}
+
+	/**
+	 * As loadObjectSlow but PROPAGATES errors. loadObjectSlow swallows IOException and
+	 * just logs - a truncated/corrupt file can leave a silently PARTIAL object. Callers
+	 * loading consensus-critical data (MegaMMR import) must use this strict variant.
+	 */
+	public static void loadObjectSlowStrict(File zFile, Streamable zObject) throws IOException {
+		//Does the File exist
+		if(!zFile.exists()) {
+			throw new IOException("Load Object file does not exist : "+zFile.getAbsolutePath());
+		}
+
+		FileInputStream fis 	= new FileInputStream(zFile);
+		BufferedInputStream bis = new BufferedInputStream(fis,65536);
+		DataInputStream dis 	= new DataInputStream(bis);
+		try {
+			zObject.readDataStream(dis);
+		} finally {
+			try { dis.close(); }catch(IOException ignore) {}
+			try { bis.close(); }catch(IOException ignore) {}
+			try { fis.close(); }catch(IOException ignore) {}
 		}
 	}
 	

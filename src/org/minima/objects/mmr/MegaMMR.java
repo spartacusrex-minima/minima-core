@@ -7,6 +7,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.Map;
 
 import org.minima.objects.Coin;
 import org.minima.objects.CoinProof;
@@ -192,25 +194,20 @@ public class MegaMMR implements Streamable {
 		//Scan the MMR..
 		mMMR.scanUnspendableTree();
 		
-		//Create a copy with the correct list
-		Hashtable<String,Coin> newAllCoins = new Hashtable<>();
-				
-		//First scan ALL the coins..
-		Enumeration<Coin> coins = mAllUnspentCoins.elements();
-		while(coins.hasMoreElements()) {
-			Coin cc = coins.nextElement();
-			
+		//Remove pruned coins IN-PLACE - the old copy-to-a-new-Hashtable approach doubled
+		//the biggest structure at the worst moment (OOM-killed Android MegaMMR imports)
+		Iterator<Map.Entry<String,Coin>> allcoins = mAllUnspentCoins.entrySet().iterator();
+		while(allcoins.hasNext()) {
+			Coin cc = allcoins.next().getValue();
+
 			//What entry is this
 			MMREntryNumber entry = cc.getMMREntryNumber();
-			
-			//Is this PRUNED.. if not add to NEW list
-			if(!mMMR.getPrunedUnspendableCoins().contains(entry.toString())) {
-				newAllCoins.put(cc.getCoinID().to0xString(), cc);
+
+			//Is this PRUNED.. remove from the list
+			if(mMMR.getPrunedUnspendableCoins().contains(entry.toString())) {
+				allcoins.remove();
 			}
 		}
-		
-		//And now reset the list..
-		mAllUnspentCoins = newAllCoins;
 		
 		if(PRUNE_LOGS) {
 			long timediff = System.currentTimeMillis() - timestart;
@@ -274,14 +271,52 @@ public class MegaMMR implements Streamable {
 		mMMR.readDataStream(zIn);
 		mMMR.setFinalized(false);
 		
-		//And now all the coins
-		mAllUnspentCoins = new Hashtable<>();
+		//And now all the coins - pre-size the table (avoids rehash storms on big imports)
 		int size = MiniNumber.ReadFromStream(zIn).getAsInt();
+		mAllUnspentCoins = new Hashtable<>(Math.max(16, (size*4)/3));
 		for(int i=0;i<size;i++) {
+
+			//IN-FLIGHT HEAP WATERMARK (fork change).. total heap exhaustion is
+			//PROCESS-GLOBAL: once <1% is free after GC, ANY thread's next allocation
+			//throws OutOfMemoryError - and whichever unguarded thread hits it first
+			//(a timer, the UI) kills the whole app before the import's own
+			//catch(Throwable) can report. So abort while there is still runway.
+			//Checked every 64k coins - cheap next to the stream decode.
+			if((i & 0xFFFF) == 0) {
+				Runtime rt   = Runtime.getRuntime();
+				long freemem = rt.maxMemory() - (rt.totalMemory() - rt.freeMemory());
+				long floor   = Math.max(32*1024*1024, rt.maxMemory()/20);
+				if(freemem < floor) {
+					throw new IOException("Heap nearly exhausted loading MegaMMR coins ("
+							+i+"/"+size+" loaded, "+MiniFormat.formatSize(freemem)
+							+" free) - aborting before the process dies. "
+							+"This device cannot hold this MegaMMR in memory.");
+				}
+			}
+
 			Coin cc = Coin.ReadFromStream(zIn);
-			
-			//Do we prune it..
+
+			//MEGAPRUNE AT READ TIME (fork change).. isPrunable is a pure per-coin test
+			//(address length / has-state / non-Minima token), so prunable coins can be
+			//dropped BEFORE they ever enter the table. Upstream's order - load ALL
+			//coins, THEN prune - allocated the full unpruned set at the worst possible
+			//moment, which is what OOM'd 512MB-heap phones. We still mark the MMR
+			//entry unspendable, exactly as scanUnspendable() would have.
+			if(GeneralParams.MEGAMMR_MEGAPRUNE && isPrunable(cc)) {
+				MMREntry ment = mMMR.getEntry(0, cc.getMMREntryNumber());
+				if(!ment.isEmpty()) {
+					ment.getMMRData().setUnspendable(true);
+				}
+				continue;
+			}
+
+			//Keep it..
 			mAllUnspentCoins.put(cc.getCoinID().to0xString(), cc);
+
+			//Show progress on very large loads (visible in the Android Logs tab)
+			if(i>0 && i%250000==0) {
+				MinimaLogger.log("MegaMMR loading coins.. "+i+"/"+size+" kept:"+mAllUnspentCoins.size());
+			}
 		}
 		
 		//Are we pruning the unspendable coins
