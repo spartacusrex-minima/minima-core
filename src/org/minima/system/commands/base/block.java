@@ -7,6 +7,7 @@ import org.minima.database.txpowtree.TxPoWTreeNode;
 import org.minima.database.txpowtree.TxPowTree;
 import org.minima.database.userprefs.UserDB;
 import org.minima.objects.base.MiniNumber;
+import org.minima.system.Main;
 import org.minima.system.commands.Command;
 import org.minima.system.commands.CommandException;
 import org.minima.utils.MinimaLogger;
@@ -93,6 +94,9 @@ public class block extends Command {
 		
 		//SET THIS so NEVER used again.. 
 		udb.setLastBlockAsKeyUses(higher);
+		
+		//Save it..
+		MinimaDB.getDB().saveUserDB();
 		
 		MinimaLogger.log("BLOCK AS KEYUSES TreeKeyDB:"+zTreeKeyUses+" topblock:"+topblock+" lastused:"+lastused+" higher:"+higher);
 		
